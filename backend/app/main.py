@@ -8,7 +8,14 @@ import json
 import os
 import pandas as pd
 
-# Import your database connections and models
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+
+# Load the environment variables my API key
+load_dotenv()
+
+# Import my database connections and models
 from .database import get_db
 from . import models
 
@@ -145,4 +152,80 @@ def get_geographic_influence(db: Session = Depends(get_db)):
 
     except Exception as e:
         print(f"Error in Geographic Engine: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==========================================
+# PHASE 5: AI CAMPAIGN FINANCE EXPLAINER
+# ==========================================
+
+@app.get("/api/ai-explainer/{candidate_id}")
+def get_ai_explanation(candidate_id: str, db: Session = Depends(get_db)):
+    try:
+        # 1. Fetch Candidate Data
+        candidate = db.query(models.Candidate).filter(models.Candidate.candidate_id == candidate_id).first()
+        if not candidate:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+        
+        # 2. Fetch Donations & Calculate Math for the Prompt
+        donations = db.query(models.Donation).filter(models.Donation.candidate_id == candidate_id).all()
+        
+        total_raised = sum(float(d.amount) for d in donations)
+        
+        # Find the top donor to calculate dependency percentage
+        donor_totals = {}
+        for d in donations:
+            donor_totals[d.donor_id] = donor_totals.get(d.donor_id, 0) + float(d.amount)
+        
+        if not donor_totals:
+            return {
+                "english": f"{candidate.full_name} has no recorded financial data.",
+                "swahili": f"{candidate.full_name} hana data ya kifedha iliyorekodiwa.",
+                "infographic": ["No funds raised", "No donors found"]
+            }
+            
+        top_donor_id = max(donor_totals, key=donor_totals.get)
+        top_donor_amount = donor_totals[top_donor_id]
+        top_donor_pct = (top_donor_amount / total_raised) * 100 if total_raised > 0 else 0
+
+        # 3. Initialize OpenAI via LangChain
+        llm = ChatOpenAI(temperature=0.3, model="gpt-3.5-turbo")
+
+        # 4. Construct the Prompt Template
+        prompt_template = PromptTemplate(
+            input_variables=["candidate_name", "total", "top_pct"],
+            template="""
+            You are a political financial analyst for the Civic Lens laboratory in Kenya.
+            Analyze this campaign finance data:
+            - Candidate: {candidate_name}
+            - Total Raised: KSh {total}
+            - Highest Donor Concentration: {top_pct}% of total funds comes from a single top donor/cluster.
+
+            Provide a response strictly in this JSON format. Do not use markdown blocks like ```json. Just output the raw JSON object:
+            {{
+                "english": "A one sentence plain English summary of their funding concentration.",
+                "swahili": "The exact Kiswahili translation of the summary.",
+                "infographic": [
+                    "Bullet point 1 about the total war chest",
+                    "Bullet point 2 about the reliance on the top donor",
+                    "Bullet point 3 assessing their overall financial network health"
+                ]
+            }}
+            """
+        )
+        
+        # 5. Execute the AI Chain
+        formatted_prompt = prompt_template.format(
+            candidate_name=getattr(candidate, 'full_name', getattr(candidate, 'name', 'Unknown')),
+            total=f"{total_raised:,.0f}",
+            top_pct=f"{top_donor_pct:.1f}"
+        )
+        
+        response = llm.invoke(formatted_prompt)
+        
+        # 6. Parse the LLM output into actual JSON
+        clean_text = response.content.replace("```json", "").replace("```", "").strip()
+        return json.loads(clean_text)
+
+    except Exception as e:
+        print(f"AI Engine Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
