@@ -1,3 +1,4 @@
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -229,3 +230,56 @@ def get_ai_explanation(candidate_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"AI Engine Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+    import json
+
+@app.post("/api/upload")
+async def upload_financial_document(file: UploadFile = File(...)):
+    try:
+        # 1. Read the uploaded file
+        contents = await file.read()
+        document_text = contents.decode("utf-8")
+        
+        # 2. Set up the LLM to act as a Data Engineer
+        llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+        
+        extraction_prompt = PromptTemplate(
+            input_variables=["text"],
+            template="""
+            You are an expert financial data extraction AI. 
+            Read the following raw text and extract all political campaign donations.
+            
+            Return the data STRICTLY as a valid JSON object with a single key "donations" 
+            containing a list of objects. Each object must have:
+            - "donor_name" (string)
+            - "candidate_name" (string)
+            - "amount" (integer, remove currency symbols and commas)
+            
+            Do not include any markdown formatting, backticks, or other text. Just the JSON.
+            
+            RAW TEXT:
+            {text}
+            """
+        )
+        
+        # 3. Ask the AI to extract the data
+        chain = extraction_prompt | llm
+        response = chain.invoke({"text": document_text})
+        
+        # 4. Parse the AI's response back into a Python dictionary
+        try:
+            extracted_data = json.loads(response.content)
+            
+            # NOTE: For now, I  are just returning the clean data to the frontend to verify it works!
+            
+            
+            return {
+                "message": "Document successfully processed by AI Engine.",
+                "filename": file.filename,
+                "extracted_data": extracted_data
+            }
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="AI failed to return valid JSON.")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"File processing error: {str(e)}")

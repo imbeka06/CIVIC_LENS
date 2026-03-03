@@ -6,8 +6,9 @@ import NetworkGraph from './components/NetworkGraph';
 import FundingTrends from './components/FundingTrends';
 import AIExplainer from './components/AIExplainer';
 import DashboardHome from './components/DashboardHome';
+import DataIntake from './components/DataIntake';
 
-// We extract the Header into a component so we can use the location router hook
+//  extract the Header into a component so we can use the location router hook
 const TopHeader = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -63,7 +64,7 @@ function App() {
             {/* The 5-Card Home Grid */}
             <Route path="/" element={<DashboardHome />} />
 
-            {/* Module 1: Exactly as you had it */}
+            {/* Module 1:  */}
             <Route path="/module-1" element={
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4">
@@ -76,7 +77,7 @@ function App() {
               </section>
             } />
 
-            {/* Module 2: Preserved your layout and visual weights box */}
+            {/* Module 2:  layout and visual weights box */}
             <Route path="/module-2" element={
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4 flex justify-between items-center">
@@ -120,7 +121,7 @@ function App() {
               </section>
             } />
 
-            {/* Module 3: Exactly as you had it */}
+            {/* Module 3:  */}
             <Route path="/module-3" element={
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4">
@@ -145,7 +146,7 @@ function App() {
               </section>
             } />
 
-            {/* Module 5: Added the Candidate Dropdown so the AI knows who to analyze! */}
+            {/* Module 5: e Candidate Dropdown so the AI knows who to analyze! */}
             <Route path="/module-5" element={
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4 flex justify-between items-center">
@@ -173,6 +174,13 @@ function App() {
                   <AIExplainer selectedCandidate={selectedCandidate} candidates={candidates} />
                 </div>
               </section>
+            } />
+
+            {/* New Module: Data Intake Pipeline */}
+            <Route path="/data-intake" element={
+              <div className="bg-slate-50 border border-slate-200 rounded-xl shadow-sm p-2">
+                <DataIntake />
+              </div>
             } />
 
           </Routes>

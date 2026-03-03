@@ -94,6 +94,19 @@ const DashboardHome = () => {
           <div className="w-1/2 bg-purple-500 h-4 rounded-full rounded-tr-none self-end"></div>
         </div>
       )
+    },
+    {
+      id: "module-intake",
+      title: "Data Intake Pipeline",
+      subtitle: "AI Extraction Engine",
+      description: "Upload unstructured documents and let the LLM automatically extract financial networks.",
+      link: "/data-intake",
+      color: "slate",
+      preview: (
+        <div className="flex items-center justify-center h-16 w-full mt-4 opacity-70 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
+          <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Drop Document Here</span>
+        </div>
+      )
     }
   ];
 
