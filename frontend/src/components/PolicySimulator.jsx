@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 
-const PolicySimulator = () => {
+// NEW: Accept the sandboxData prop
+const PolicySimulator = ({ sandboxData }) => {
   // Control states
   const [corporateBan, setCorporateBan] = useState(false);
   const [donationCap, setDonationCap] = useState(null);
@@ -14,40 +15,164 @@ const PolicySimulator = () => {
   const [loading, setLoading] = useState(false);
   const [maxDonation, setMaxDonation] = useState(10000000);
 
+  // Helper: Convert sandbox donations to network format
+  const convertSandboxToNetwork = (donations) => {
+    const nodesMap = new Map();
+    const linksList = [];
+
+    console.log("🔍 Converting sandbox donations to network:", donations);
+
+    donations.forEach(don => {
+      const cName = don.candidate_name || "Unknown Candidate";
+      const dName = don.donor_name || "Unknown Donor";
+      
+      // Generate safe IDs matching our backend logic
+      const cId = cName.toLowerCase().replace(/ /g, "_").substring(0, 50);
+      const dId = dName.toLowerCase().replace(/ /g, "_").substring(0, 50);
+      const amount = Number(don.amount) || 0;
+
+      console.log(`  → Donation: ${dName} (${dId}) → ${cName} (${cId}): ${amount}`);
+
+      // 1. Create Nodes if they don't exist
+      if (!nodesMap.has(cId)) {
+        nodesMap.set(cId, { id: cId, name: cName, group: "Candidate", centrality_score: 0 });
+      }
+      if (!nodesMap.has(dId)) {
+        nodesMap.set(dId, { id: dId, name: dName, group: "Donor", centrality_score: 0 });
+      }
+
+      // Add centrality weight
+      nodesMap.get(cId).centrality_score += 0.1;
+      nodesMap.get(dId).centrality_score += 0.05;
+
+      // 2. Create or aggregate Links
+      const existingLink = linksList.find(l => l.source === dId && l.target === cId);
+      if (existingLink) {
+        existingLink.amount += amount;
+      } else {
+        linksList.push({ source: dId, target: cId, amount: amount });
+      }
+    });
+
+    const result = { nodes: Array.from(nodesMap.values()), links: linksList };
+    console.log("Network created:", result);
+    return result;
+  };
+
   // Fetch baseline on mount
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/network-metrics')
-      .then(res => res.json())
-      .then(data => {
-        setBaselineData(data);
-        // Infer max donation for slider from baseline
-        const maxAmount = Math.max(...data.links.map(l => l.amount), 1000000);
-        setMaxDonation(Math.ceil(maxAmount / 100000) * 100000);
-      })
-      .catch(err => console.error("Error fetching baseline:", err));
-  }, []);
-
-  // Fetch simulation whenever regulations change
-  useEffect(() => {
-    setLoading(true);
+    console.log("PolicySimulator: Baseline effect triggered", { sandboxData, hasDonations: sandboxData?.donations?.length });
     
-    const params = new URLSearchParams();
-    params.append('corporate_ban', corporateBan);
-    if (donationCap !== null) params.append('donation_cap', donationCap);
-    params.append('public_funding_percent', publicFundingPercent);
+    // --- BRANCH 1: ISOLATED SANDBOX MODE ---
+    if (sandboxData && sandboxData.donations) {
+      console.log("SANDBOX MODE: Converting", sandboxData.donations.length, "donations to network");
+      const networkData = convertSandboxToNetwork(sandboxData.donations);
+      setBaselineData(networkData);
+      setSimulatedData(networkData); // Initialize simulated with baseline
+      // Infer max donation for slider from baseline
+      const maxAmount = Math.max(...networkData.links.map(l => l.amount), 1000000);
+      setMaxDonation(Math.ceil(maxAmount / 100000) * 100000);
+    } 
+    // --- BRANCH 2: GLOBAL DATABASE MODE ---
+    else {
+      console.log("DATABASE MODE: Fetching from API");
+      fetch('http://127.0.0.1:8000/api/network-metrics')
+        .then(res => res.json())
+        .then(data => {
+          console.log("Database network loaded:", data);
+          setBaselineData(data);
+          setSimulatedData(data); // Initialize simulated with baseline
+          // Infer max donation for slider from baseline
+          const maxAmount = Math.max(...data.links.map(l => l.amount), 1000000);
+          setMaxDonation(Math.ceil(maxAmount / 100000) * 100000);
+        })
+        .catch(err => console.error("Error fetching baseline:", err));
+    }
+  }, [sandboxData]);
 
-    fetch(`http://127.0.0.1:8000/api/simulate-policy?${params.toString()}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    })
-      .then(res => res.json())
-      .then(data => {
-        setSimulatedData(data.simulated);
-        setImpactMetrics(data.impact);
+  // Apply regulations and update simulated data whenever settings change
+  useEffect(() => {
+    // --- BRANCH 1: ISOLATED SANDBOX MODE ---
+    if (sandboxData && sandboxData.donations) {
+      setLoading(true);
+      
+      // Apply regulations to donations
+      let filteredDonations = [...sandboxData.donations];
+      
+      // Rule 1: Donation Cap
+      if (donationCap !== null) {
+        filteredDonations = filteredDonations.map(don => ({
+          ...don,
+          amount: Math.min(Number(don.amount), donationCap)
+        }));
+      }
+      
+      // Rule 2: Public Funding Injection
+      if (publicFundingPercent > 0) {
+        const uniqueCandidates = [...new Set(filteredDonations.map(d => d.candidate_name))];
+        const totalFunds = filteredDonations.reduce((sum, d) => sum + Number(d.amount), 0);
+        const injectionPerCandidate = (totalFunds * publicFundingPercent / 100) / uniqueCandidates.length;
+        
+        uniqueCandidates.forEach(candidate => {
+          filteredDonations.push({
+            donor_name: "Public Fund",
+            candidate_name: candidate,
+            amount: injectionPerCandidate
+          });
+        });
+      }
+      
+      // Build simulated network
+      const simulatedNetwork = convertSandboxToNetwork(filteredDonations);
+      setSimulatedData(simulatedNetwork);
+      
+      // Calculate impact metrics
+      const baselineTotal = sandboxData.donations.reduce((sum, d) => sum + Number(d.amount), 0);
+      const simulatedTotal = filteredDonations.reduce((sum, d) => sum + Number(d.amount), 0);
+      const fundsRemoved = baselineTotal - simulatedTotal;
+      
+      // Get unique candidates for centrality calculation
+      const uniqueCandidates = [...new Set(sandboxData.donations.map(d => d.candidate_name))];
+      
+      const metrics = {
+        funds_removed: fundsRemoved,
+        funds_removed_pct: ((fundsRemoved / baselineTotal) * 100).toFixed(2),
+        network_density_change: simulatedNetwork.links.length > 0 && baselineData.links.length > 0 
+          ? (simulatedNetwork.links.length / baselineData.links.length).toFixed(2) 
+          : 0,
+        top_5_candidates: uniqueCandidates.slice(0, 5).map(candidate => ({
+          candidate: candidate,
+          baseline_centrality: 0.1,  // Simplified for sandbox
+          simulated_centrality: 0.09,
+          centrality_change: -0.01
+        }))
+      };
+      
+      setImpactMetrics(metrics);
+      setLoading(false);
+    } 
+    // --- BRANCH 2: GLOBAL DATABASE MODE ---
+    else if (baselineData.links && baselineData.links.length > 0) {
+      setLoading(true);
+      
+      const params = new URLSearchParams();
+      params.append('corporate_ban', corporateBan);
+      if (donationCap !== null) params.append('donation_cap', donationCap);
+      params.append('public_funding_percent', publicFundingPercent);
+
+      fetch(`http://127.0.0.1:8000/api/simulate-policy?${params.toString()}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
       })
-      .catch(err => console.error("Simulation error:", err))
-      .finally(() => setLoading(false));
-  }, [corporateBan, donationCap, publicFundingPercent]);
+        .then(res => res.json())
+        .then(data => {
+          setSimulatedData(data.simulated);
+          setImpactMetrics(data.impact);
+        })
+        .catch(err => console.error("Simulation error:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [corporateBan, donationCap, publicFundingPercent, sandboxData, baselineData.links]);
 
   return (
     <div className="space-y-8">
