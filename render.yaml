@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: civic-lens-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && alembic upgrade head && python app/seed.py
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # Paste your Supabase connection string here in Render dashboard
+      - key: OPENAI_API_KEY
+        sync: false   # Paste your OpenAI key here in Render dashboard
+      - key: ALLOWED_ORIGINS
+        sync: false   # Paste your Vercel frontend URL e.g. https://civic-lens.vercel.app

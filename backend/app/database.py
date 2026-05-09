@@ -8,7 +8,11 @@ load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Supabase (and most hosted Postgres) requires SSL; localhost does not
+_is_local = "localhost" in (SQLALCHEMY_DATABASE_URL or "") or "127.0.0.1" in (SQLALCHEMY_DATABASE_URL or "")
+_connect_args = {} if _is_local else {"sslmode": "require"}
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args=_connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # This is the 'Base' that Alembic is looking for!
