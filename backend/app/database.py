@@ -1,10 +1,12 @@
 import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
-# Load the .env file automatically
-load_dotenv()
+# Load .env relative to this file so it works regardless of working directory
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path)
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 

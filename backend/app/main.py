@@ -11,11 +11,12 @@ from datetime import date  # Added for timestamping new donations
 from typing import Optional
 
 from dotenv import load_dotenv
+from pathlib import Path
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 
-# Load the environment variables my API key
-load_dotenv()
+# Load .env relative to this file so it works regardless of working directory
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
 # Import my database connections and models
 from .database import get_db
@@ -183,10 +184,11 @@ def get_ai_explanation(candidate_id: str, db: Session = Depends(get_db)):
         for d in donations:
             donor_totals[d.donor_id] = donor_totals.get(d.donor_id, 0) + float(d.amount)
         
+        candidate_name = getattr(candidate, 'full_name', getattr(candidate, 'name', 'Unknown'))
         if not donor_totals:
             return {
-                "english": f"{candidate.full_name} has no recorded financial data.",
-                "swahili": f"{candidate.full_name} hana data ya kifedha iliyorekodiwa.",
+                "english": f"{candidate_name} has no recorded financial data.",
+                "swahili": f"{candidate_name} hana data ya kifedha iliyorekodiwa.",
                 "infographic": ["No funds raised", "No donors found"]
             }
             
