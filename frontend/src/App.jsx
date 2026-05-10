@@ -73,7 +73,7 @@ function App() {
   }, [sandboxData]);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/candidates')
+    fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/candidates`)
       .then(res => res.json())
       .then(data => setGlobalCandidates(data))
       .catch(err => console.error("Error fetching candidates:", err));

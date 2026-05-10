@@ -17,7 +17,7 @@ const MapVisualization = ({ sandboxData }) => {
 
     useEffect(() => {
         // We always fetch from the backend to get the actual GeoJSON map shapes
-        fetch('http://127.0.0.1:8000/api/geographic-influence')
+        fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/geographic-influence`)
             .then(res => {
                 if (!res.ok) throw new Error("Backend not responding correctly");
                 return res.json();

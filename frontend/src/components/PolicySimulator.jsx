@@ -76,7 +76,7 @@ const PolicySimulator = ({ sandboxData }) => {
     // --- BRANCH 2: GLOBAL DATABASE MODE ---
     else {
       console.log("DATABASE MODE: Fetching from API");
-      fetch('http://127.0.0.1:8000/api/network-metrics')
+      fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/network-metrics`)
         .then(res => res.json())
         .then(data => {
           console.log("Database network loaded:", data);
@@ -160,7 +160,7 @@ const PolicySimulator = ({ sandboxData }) => {
       if (donationCap !== null) params.append('donation_cap', donationCap);
       params.append('public_funding_percent', publicFundingPercent);
 
-      fetch(`http://127.0.0.1:8000/api/simulate-policy?${params.toString()}`, {
+      fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/simulate-policy?${params.toString()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })

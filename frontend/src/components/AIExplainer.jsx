@@ -78,7 +78,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
     // --- BRANCH 2: GLOBAL DATABASE MODE ---
     else {
       // Fetch the actual LLM response from our backend route
-      fetch(`http://127.0.0.1:8000/api/ai-explainer/${selectedCandidate}`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/ai-explainer/${selectedCandidate}`)
         .then(res => {
           if (!res.ok) throw new Error("Backend AI Engine failed to respond.");
           return res.json();

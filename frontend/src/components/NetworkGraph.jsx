@@ -46,7 +46,7 @@ const NetworkGraph = ({ targetCandidateId, sandboxData }) => {
     } 
     // --- BRANCH 2: GLOBAL DATABASE MODE ---
     else {
-      fetch('http://127.0.0.1:8000/api/network-metrics')
+      fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/network-metrics`)
         .then(res => res.json())
         .then(json => setRawData(json))
         .catch(err => console.error("Network Engine Error:", err));
