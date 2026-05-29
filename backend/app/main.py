@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 import networkx as nx
 import community.community_louvain as community_louvain
 import geopandas as gpd
@@ -23,6 +24,57 @@ from .database import get_db
 from . import models
 
 app = FastAPI(title="Civic Lens API")
+
+SUPPORTED_LANGUAGE_NAMES = {
+    "en": "English",
+    "sw": "Kiswahili",
+    "luo": "Dholuo",
+    "kikuyu": "Kikuyu",
+    "kamba": "Kamba",
+    "giriama": "Giriama",
+    "kalenjin": "Kalenjin"
+}
+
+
+class TranslationRequest(BaseModel):
+    text: str
+    target_lang: str = "sw"
+
+
+def translate_text(text: str, target_lang: str) -> str:
+    if not text:
+        return ""
+
+    lang_code = (target_lang or "en").lower()
+    if lang_code == "en":
+        return text
+
+    if lang_code not in SUPPORTED_LANGUAGE_NAMES:
+        raise HTTPException(status_code=400, detail=f"Unsupported language: {lang_code}")
+
+    llm = ChatOpenAI(temperature=0.2, model="gpt-3.5-turbo")
+    lang_name = SUPPORTED_LANGUAGE_NAMES[lang_code]
+    prompt = f"""
+    Translate the following civic-finance text into {lang_name}.
+    Keep amounts, names, percentages, and meaning exactly the same.
+    Return only the translated sentence without quotes.
+
+    TEXT:
+    {text}
+    """
+    response = llm.invoke(prompt)
+    return response.content.strip()
+
+
+@app.post("/api/translate")
+def translate_content(payload: TranslationRequest):
+    lang_code = (payload.target_lang or "en").lower()
+    translated = translate_text(payload.text, lang_code)
+    return {
+        "source_text": payload.text,
+        "translated_text": translated,
+        "target_lang": lang_code
+    }
 
 # --- SECURITY & CORS ---
 ALLOWED_ORIGINS = os.getenv(
@@ -167,8 +219,12 @@ def get_geographic_influence(db: Session = Depends(get_db)):
 # ==========================================
 
 @app.get("/api/ai-explainer/{candidate_id}")
-def get_ai_explanation(candidate_id: str, db: Session = Depends(get_db)):
+def get_ai_explanation(candidate_id: str, lang: str = "sw", db: Session = Depends(get_db)):
     try:
+        lang_code = (lang or "en").lower()
+        if lang_code not in SUPPORTED_LANGUAGE_NAMES:
+            raise HTTPException(status_code=400, detail=f"Unsupported language: {lang_code}")
+
         # 1. Fetch Candidate Data
         candidate = db.query(models.Candidate).filter(models.Candidate.candidate_id == candidate_id).first()
         if not candidate:
@@ -186,10 +242,28 @@ def get_ai_explanation(candidate_id: str, db: Session = Depends(get_db)):
         
         candidate_name = getattr(candidate, 'full_name', getattr(candidate, 'name', 'Unknown'))
         if not donor_totals:
+            fallback_english = f"{candidate_name} has no recorded financial data."
+            fallback_swahili = f"{candidate_name} hana data ya kifedha iliyorekodiwa."
+            if lang_code == "en":
+                analysis_text = fallback_english
+                translated_infographic = ["No funds raised", "No donors found"]
+            elif lang_code == "sw":
+                analysis_text = fallback_swahili
+                translated_infographic = ["Hakuna fedha zilizokusanywa", "Hakuna wafadhili waliopatikana"]
+            else:
+                analysis_text = translate_text(fallback_english, lang_code)
+                translated_infographic = [
+                    translate_text("No funds raised", lang_code),
+                    translate_text("No donors found", lang_code)
+                ]
+
             return {
-                "english": f"{candidate_name} has no recorded financial data.",
-                "swahili": f"{candidate_name} hana data ya kifedha iliyorekodiwa.",
-                "infographic": ["No funds raised", "No donors found"]
+                "english": fallback_english,
+                "swahili": fallback_swahili,
+                "analysis": analysis_text,
+                "analysis_language": lang_code,
+                "infographic": ["No funds raised", "No donors found"],
+                "infographic_translated": translated_infographic
             }
             
         top_donor_id = max(donor_totals, key=donor_totals.get)
@@ -233,7 +307,30 @@ def get_ai_explanation(candidate_id: str, db: Session = Depends(get_db)):
         
         # 6. Parse the LLM output into actual JSON
         clean_text = response.content.replace("```json", "").replace("```", "").strip()
-        return json.loads(clean_text)
+        payload = json.loads(clean_text)
+
+        english_text = payload.get("english", "")
+        swahili_text = payload.get("swahili", "")
+        infographic = payload.get("infographic", [])
+
+        if lang_code == "en":
+            analysis_text = english_text
+            translated_infographic = infographic
+        elif lang_code == "sw":
+            analysis_text = swahili_text or translate_text(english_text, "sw")
+            translated_infographic = [translate_text(point, "sw") for point in infographic]
+        else:
+            analysis_text = translate_text(english_text, lang_code)
+            translated_infographic = [translate_text(point, lang_code) for point in infographic]
+
+        return {
+            "english": english_text,
+            "swahili": swahili_text,
+            "analysis": analysis_text,
+            "analysis_language": lang_code,
+            "infographic": infographic,
+            "infographic_translated": translated_infographic
+        }
 
     except Exception as e:
         print(f"AI Engine Error: {str(e)}")

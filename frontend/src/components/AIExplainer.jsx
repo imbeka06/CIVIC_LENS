@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // NEW: Added sandboxData to the props
 const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
+  const { language } = useLanguage();
   const [messages, setMessages] = useState([
     {
       role: 'bot',
       type: 'welcome',
-      content: 'Welcome to the Civic Lens AI Explainer. Please select a specific candidate from the dropdown above to generate a bilingual financial dossier.'
+      content: 'Welcome to the Civic Lens AI Explainer. Please select a specific candidate from the dropdown above to generate a multilingual financial dossier.'
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,16 +62,21 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
 
       // B. Simulate the LLM Response so we don't have to rebuild the backend
       setTimeout(() => {
+        const translatedBullets = [
+          `Total extracted war chest amounts to KSh ${totalRaised.toLocaleString()}`,
+          `Heavy reliance on ${topDonor}, contributing KSh ${topDonorAmount.toLocaleString()}`,
+          `Financial network indicates a ${topPct > 50 ? 'high' : 'moderate'} concentration risk based on current document context.`
+        ];
+
         setMessages(prev => [...prev, {
           role: 'bot',
           type: 'analysis',
           english: `${candidateName} has a highly concentrated funding network, with ${topPct.toFixed(1)}% of their total war chest originating from a single primary donor: ${topDonor}.`,
           swahili: `${candidateName} ana mtandao wa kifedha uliokolea sana, huku asilimia ${topPct.toFixed(1)}% ya jumla ya fedha zake zikitoka kwa mfadhili mkuu mmoja: ${topDonor}.`,
-          infographic: [
-            `Total extracted war chest amounts to KSh ${totalRaised.toLocaleString()}`,
-            `Heavy reliance on ${topDonor}, contributing KSh ${topDonorAmount.toLocaleString()}`,
-            `Financial network indicates a ${topPct > 50 ? 'high' : 'moderate'} concentration risk based on current document context.`
-          ]
+          analysis: `${candidateName} has a highly concentrated funding network, with ${topPct.toFixed(1)}% of their total war chest originating from a single primary donor: ${topDonor}.`,
+          analysis_language: 'en',
+          infographic: translatedBullets,
+          infographic_translated: translatedBullets
         }]);
         setIsLoading(false);
       }, 1500); // Simulate AI thinking time
@@ -78,7 +85,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
     // --- BRANCH 2: GLOBAL DATABASE MODE ---
     else {
       // Fetch the actual LLM response from our backend route
-      fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/ai-explainer/${selectedCandidate}`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/ai-explainer/${selectedCandidate}?lang=${encodeURIComponent(language)}`)
         .then(res => {
           if (!res.ok) throw new Error("Backend AI Engine failed to respond.");
           return res.json();
@@ -89,7 +96,10 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
             type: 'analysis',
             english: data.english,
             swahili: data.swahili,
-            infographic: data.infographic
+            analysis: data.analysis,
+            analysis_language: data.analysis_language,
+            infographic: data.infographic,
+            infographic_translated: data.infographic_translated || data.infographic
           }]);
         })
         .catch(err => {
@@ -98,7 +108,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
         .finally(() => setIsLoading(false));
     }
 
-  }, [selectedCandidate, candidates, sandboxData]); // Added sandboxData to dependency array
+  }, [selectedCandidate, candidates, sandboxData, language]); // Re-fetch dossier when language changes
 
   return (
     <div className="flex flex-col h-[500px] bg-slate-50 rounded-xl border border-slate-200 overflow-hidden font-sans">
@@ -156,11 +166,17 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
                   <p className="text-sm text-slate-700 italic leading-relaxed">{msg.swahili}</p>
                 </div>
 
+                {/* Selected Language Section */}
+                <div className="p-4 bg-emerald-50/50 border-b border-slate-100">
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 block">Selected Language Summary</span>
+                  <p className="text-sm text-emerald-900 leading-relaxed">{msg.analysis || msg.english}</p>
+                </div>
+
                 {/* Infographic Bullets */}
                 <div className="p-4 bg-blue-50/50">
                   <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2 block">Key Insights Breakdown</span>
                   <ul className="space-y-2">
-                    {msg.infographic.map((point, i) => (
+                    {(msg.infographic_translated || msg.infographic).map((point, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs text-blue-900 leading-relaxed">
                         <span className="text-blue-500 mt-0.5">⚡</span>
                         <span>{point}</span>
