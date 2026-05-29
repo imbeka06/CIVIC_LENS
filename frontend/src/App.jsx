@@ -9,12 +9,14 @@ import DashboardHome from './components/DashboardHome';
 import DataIntake from './components/DataIntake';
 import LandingPage from './components/LandingPage';
 import PolicySimulator from './components/PolicySimulator';
+import { useLanguage } from './i18n/LanguageContext';
 
 // Extract the Header into a component so we can use the location router hook
 const TopHeader = ({ sandboxMode, clearSandbox }) => {
   const location = useLocation();
   const isLanding = location.pathname === '/';
   const isHub = location.pathname === '/hub';
+  const { t } = useLanguage();
 
   return (
     <header className="border-b border-slate-200 bg-white p-6 shadow-sm sticky top-0 z-[2000]">
@@ -22,18 +24,18 @@ const TopHeader = ({ sandboxMode, clearSandbox }) => {
         <div>
           <Link to="/">
             <h1 className="text-3xl font-bold text-slate-800 tracking-tight hover:text-blue-700 transition-colors">
-              CIVIC LENS <span className="text-blue-600 font-light">LABORATORY</span>
+              {t('appTitle')}
             </h1>
           </Link>
           <p className="text-slate-500 text-xs uppercase tracking-widest mt-1 font-semibold">
-            Advanced Financial Intelligence Suite
+            {t('appTagline')}
           </p>
         </div>
         <div className="flex items-center gap-4">
           {/* Show a Return button if we are inside a module */}
           {(!isLanding && !isHub) && (
             <Link to="/hub" className="text-sm font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 transition-colors">
-              ← Return to Hub
+              ← {t('returnToHub')}
             </Link>
           )}
           
@@ -41,15 +43,15 @@ const TopHeader = ({ sandboxMode, clearSandbox }) => {
           {sandboxMode ? (
             <div className="flex items-center gap-2">
               <div className="px-4 py-2 border border-purple-200 rounded-full bg-purple-50 text-[10px] animate-pulse">
-                <span className="text-purple-700 font-bold">SYSTEM STATUS:</span> <span className="text-purple-600">ISOLATED SANDBOX</span>
+                <span className="text-purple-700 font-bold">{t('statusLabel')}</span> <span className="text-purple-600">{t('statusSandbox')}</span>
               </div>
               <button onClick={clearSandbox} className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-full border border-red-200 transition-colors shadow-sm">
-                EXIT SANDBOX
+                {t('exitSandbox')}
               </button>
             </div>
           ) : (
             <div className="px-4 py-2 border border-blue-100 rounded-full bg-blue-50 text-[10px]">
-              <span className="text-blue-700 font-bold">SYSTEM STATUS:</span> <span className="text-blue-600">GLOBAL DATABASE</span>
+              <span className="text-blue-700 font-bold">{t('statusLabel')}</span> <span className="text-blue-600">{t('statusGlobal')}</span>
             </div>
           )}
         </div>
@@ -61,6 +63,7 @@ const TopHeader = ({ sandboxMode, clearSandbox }) => {
 function App() {
   const [selectedCandidate, setSelectedCandidate] = useState("all");
   const [globalCandidates, setGlobalCandidates] = useState([]);
+  const { language } = useLanguage();
   
   // THE NEW BRAIN: Short-Term Memory for the Isolated Sandbox
   const [sandboxData, setSandboxData] = useState(null);

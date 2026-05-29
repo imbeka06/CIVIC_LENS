@@ -1,22 +1,41 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../i18n/LanguageContext';
+import { SUPPORTED_LANGUAGES } from '../i18n/languages';
 
 const LandingPage = () => {
+  const { language, setLanguage, t } = useLanguage();
+
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center animate-fade-in relative overflow-hidden">
       {/* Subtle Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-emerald-400/10 blur-3xl rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-400/10 blur-3xl rounded-full pointer-events-none"></div>
 
+      <div className="absolute top-6 right-6 z-20 bg-white/90 border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+        <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">
+          {t('landingLanguageLabel')}
+        </label>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="text-sm border border-slate-300 rounded-md px-2 py-1 bg-white text-slate-700"
+        >
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <option key={lang.code} value={lang.code}>{lang.label}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="text-center mb-16 z-10">
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-4 uppercase">
-          Unveil Your Country's <br/>
+          {t('landingTitleLine1')} <br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
-            Funding Landscape
+            {t('landingTitleLine2')}
           </span>
         </h1>
         <p className="text-slate-500 max-w-2xl mx-auto">
-          Choose your analytical path. Explore our global database of political networks, or upload your own raw documents to assess localized financial relationships.
+          {t('landingIntro')}
         </p>
       </div>
 
@@ -32,10 +51,10 @@ const LandingPage = () => {
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
 
-          <h2 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:text-emerald-700 transition-colors">Civic Lens Lab</h2>
-          <p className="text-emerald-600 font-bold uppercase tracking-widest text-[11px] mb-4">Explore the Current Trend</p>
+          <h2 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:text-emerald-700 transition-colors">{t('landingCard1Title')}</h2>
+          <p className="text-emerald-600 font-bold uppercase tracking-widest text-[11px] mb-4">{t('landingCard1Kicker')}</p>
           <p className="text-slate-500 text-sm leading-relaxed">
-            Dive into the aggregated national database. Interact with the 5 analytical modules to view historical funding trends, geospatial wealth distribution, and vast network connections.
+            {t('landingCard1Body')}
           </p>
         </Link>
 
@@ -49,10 +68,10 @@ const LandingPage = () => {
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
 
-          <h2 className="text-3xl font-extrabold text-white mb-2 group-hover:text-purple-300 transition-colors">AI Extraction</h2>
-          <p className="text-purple-400 font-bold uppercase tracking-widest text-[11px] mb-4">Be Your Country's Assessor</p>
+          <h2 className="text-3xl font-extrabold text-white mb-2 group-hover:text-purple-300 transition-colors">{t('landingCard2Title')}</h2>
+          <p className="text-purple-400 font-bold uppercase tracking-widest text-[11px] mb-4">{t('landingCard2Kicker')}</p>
           <p className="text-slate-400 text-sm leading-relaxed">
-            Upload unstructured text or raw financial documents. Our LLM will extract the entities and generate an isolated, interactive dashboard exclusively for your file's data.
+            {t('landingCard2Body')}
           </p>
         </Link>
 

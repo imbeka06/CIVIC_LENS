@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const DashboardHome = () => {
+  const { t } = useLanguage();
   const modules = [
     {
       id: "module-1",
@@ -113,8 +115,8 @@ const DashboardHome = () => {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="border-l-4 border-blue-600 pl-4">
-        <h2 className="text-3xl font-bold text-slate-800">Laboratory Modules</h2>
-        <p className="text-slate-500 mt-2 text-sm">Select an analytical engine below to begin your investigation.</p>
+        <h2 className="text-3xl font-bold text-slate-800">{t('hubTitle')}</h2>
+        <p className="text-slate-500 mt-2 text-sm">{t('hubSubtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
