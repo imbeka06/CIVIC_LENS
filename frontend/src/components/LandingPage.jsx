@@ -16,7 +16,10 @@ const LandingPage = () => {
     card1Body: 'Dive into the aggregated national database. Interact with the 5 analytical modules to view historical funding trends, geospatial wealth distribution, and vast network connections.',
     card2Title: 'AI Extraction',
     card2Kicker: "Be Your Country's Assessor",
-    card2Body: "Upload unstructured text or raw financial documents. Our LLM will extract the entities and generate an isolated, interactive dashboard exclusively for your file's data."
+    card2Body: "Upload unstructured text or raw financial documents. Our LLM will extract the entities and generate an isolated, interactive dashboard exclusively for your file's data.",
+    card3Title: 'Learn and Educate',
+    card3Kicker: 'Know the Law and Latest Bills',
+    card3Body: 'Browse the latest Finance Bills and crucial campaign laws in Kenya. Search for documents, open official sources, and ask AI for a detailed explanation.'
   }), []);
   const s = useLocalizedStrings(englishStrings);
 
@@ -53,7 +56,7 @@ const LandingPage = () => {
         </p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl z-10 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full max-w-6xl z-10 px-4">
         
         {/* Card 1: Civic Lens Lab (Global Database) */}
         <Link to="/hub" className="flex-1 group relative bg-white rounded-3xl p-10 border border-slate-200 shadow-xl hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center text-center">
@@ -86,6 +89,21 @@ const LandingPage = () => {
           <p className="text-purple-400 font-bold uppercase tracking-widest text-[11px] mb-4">{s.card2Kicker}</p>
           <p className="text-slate-400 text-sm leading-relaxed">
             {s.card2Body}
+          </p>
+        </Link>
+
+        <Link to="/learn" className="flex-1 group relative bg-white rounded-3xl p-10 border border-slate-200 shadow-xl hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center text-center">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-cyan-500"></div>
+          <div className="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+          <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-8 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v11.494m-9-5.747h18M5.5 5.5l13 13m0-13l-13 13" /></svg>
+          </div>
+
+          <h2 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:text-indigo-700 transition-colors">{s.card3Title}</h2>
+          <p className="text-indigo-600 font-bold uppercase tracking-widest text-[11px] mb-4">{s.card3Kicker}</p>
+          <p className="text-slate-500 text-sm leading-relaxed">
+            {s.card3Body}
           </p>
         </Link>
 

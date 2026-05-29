@@ -8,8 +8,12 @@ import geopandas as gpd
 import json
 import os
 import pandas as pd
+import re
 from datetime import date, datetime  # Added for timestamping new donations
-from typing import Optional, Dict
+from html import unescape
+from typing import Optional, Dict, List
+from urllib.parse import quote_plus, urlparse, parse_qs, unquote
+from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
 from pathlib import Path
@@ -52,6 +56,156 @@ class TranslationFeedbackRequest(BaseModel):
     translated_text: str
     target_lang: str
     comment: Optional[str] = None
+
+
+class EducationExplainRequest(BaseModel):
+    title: str
+    url: Optional[str] = None
+    snippet: Optional[str] = None
+    language: str = "en"
+
+
+def _education_docs_path() -> Path:
+    return _data_dir() / "education_documents.json"
+
+
+def _load_education_documents() -> List[dict]:
+    docs_path = _education_docs_path()
+    if not docs_path.exists():
+        return []
+    try:
+        with open(docs_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+            return payload.get("documents", [])
+    except Exception:
+        return []
+
+
+def _extract_year(text: str) -> Optional[int]:
+    if not text:
+        return None
+    match = re.search(r"(20\d{2})", text)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def _clean_html_text(value: str) -> str:
+    text = re.sub(r"<[^>]+>", " ", value or "")
+    return unescape(re.sub(r"\s+", " ", text)).strip()
+
+
+def _duckduckgo_search(query: str, max_results: int = 12) -> List[dict]:
+    search_url = f"https://lite.duckduckgo.com/lite/?q={quote_plus(query)}"
+    req = Request(
+        search_url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        }
+    )
+
+    with urlopen(req, timeout=20) as res:
+        html = res.read().decode("utf-8", errors="ignore")
+
+    anchors = re.findall(r"<a[^>]+href=\"([^\"]+)\"[^>]*>(.*?)</a>", html, flags=re.IGNORECASE)
+    results = []
+    seen = set()
+
+    for href, raw_title in anchors:
+        title = _clean_html_text(raw_title)
+        if not title:
+            continue
+
+        parsed = urlparse(href)
+        url = href
+
+        if "duckduckgo.com/l/" in href or parsed.path.startswith("/l/"):
+            params = parse_qs(parsed.query)
+            if "uddg" in params and params["uddg"]:
+                url = unquote(params["uddg"][0])
+
+        if not url.startswith("http"):
+            continue
+
+        if "duckduckgo.com" in url:
+            continue
+
+        if url in seen:
+            continue
+
+        seen.add(url)
+        results.append(
+            {
+                "title": title,
+                "url": url,
+                "source": urlparse(url).netloc,
+                "year": _extract_year(f"{title} {url}")
+            }
+        )
+
+        if len(results) >= max_results:
+            break
+
+    return results
+
+
+def _categorize_document(title: str, url: str) -> str:
+    blob = f"{title} {url}".lower()
+    if "finance bill" in blob or "appropriation" in blob:
+        return "finance"
+    if "campaign" in blob or "political parties" in blob or "elections act" in blob:
+        return "campaign"
+    return "general"
+
+
+def _dedupe_docs(docs: List[dict]) -> List[dict]:
+    unique = {}
+    for doc in docs:
+        key = (doc.get("url") or "").strip().lower()
+        if not key:
+            key = (doc.get("title") or "").strip().lower()
+        if not key:
+            continue
+        if key not in unique:
+            unique[key] = doc
+    return list(unique.values())
+
+
+def _sort_docs(docs: List[dict]) -> List[dict]:
+    return sorted(
+        docs,
+        key=lambda d: (d.get("year") is not None, d.get("year") or 0),
+        reverse=True,
+    )
+
+
+def _fetch_url_text(url: Optional[str]) -> str:
+    if not url or not url.startswith("http"):
+        return ""
+
+    if url.lower().endswith(".pdf"):
+        return ""
+
+    req = Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        },
+    )
+
+    try:
+        with urlopen(req, timeout=20) as res:
+            content_type = (res.headers.get("Content-Type") or "").lower()
+            if "pdf" in content_type:
+                return ""
+            html = res.read(120000).decode("utf-8", errors="ignore")
+    except Exception:
+        return ""
+
+    html = re.sub(r"<script[\s\S]*?</script>", " ", html, flags=re.IGNORECASE)
+    html = re.sub(r"<style[\s\S]*?</style>", " ", html, flags=re.IGNORECASE)
+    text = _clean_html_text(html)
+    return text[:6000]
 
 
 def _data_dir() -> Path:
@@ -167,6 +321,146 @@ def submit_translation_feedback(payload: TranslationFeedbackRequest):
         raise HTTPException(status_code=500, detail=f"Failed to save feedback: {str(e)}")
 
     return {"message": "Translation feedback saved", "target_lang": lang_code}
+
+
+@app.get("/api/education/featured")
+def get_featured_education_documents():
+    curated_docs = _load_education_documents()
+
+    dynamic_queries = [
+        "Kenya Finance Bill 2026 pdf",
+        "Kenya Finance Bill 2025 pdf",
+        "Kenya Finance Bill parliament.go.ke",
+        "Kenya campaign financing act pdf",
+    ]
+
+    dynamic_docs = []
+    for query in dynamic_queries:
+        try:
+            dynamic_docs.extend(_duckduckgo_search(query, max_results=6))
+        except Exception:
+            continue
+
+    all_docs = _dedupe_docs(curated_docs + dynamic_docs)
+    for doc in all_docs:
+        if not doc.get("category"):
+            doc["category"] = _categorize_document(doc.get("title", ""), doc.get("url", ""))
+        if doc.get("year") is None:
+            doc["year"] = _extract_year(f"{doc.get('title', '')} {doc.get('url', '')}")
+
+    finance_docs = _sort_docs([d for d in all_docs if d.get("category") == "finance"])[:12]
+    campaign_docs = _sort_docs([d for d in all_docs if d.get("category") == "campaign"])[:12]
+
+    return {
+        "finance_bills": finance_docs,
+        "campaign_laws": campaign_docs,
+        "updated_at": datetime.utcnow().isoformat() + "Z"
+    }
+
+
+@app.get("/api/education/search")
+def search_education_documents(q: str):
+    query = (q or "").strip()
+    if len(query) < 2:
+        raise HTTPException(status_code=400, detail="Search query must be at least 2 characters")
+
+    search_query = f"{query} Kenya campaign finance law bill pdf"
+    try:
+        results = _duckduckgo_search(search_query, max_results=20)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+    normalized = []
+    for doc in results:
+        normalized.append(
+            {
+                "title": doc.get("title"),
+                "url": doc.get("url"),
+                "source": doc.get("source"),
+                "year": doc.get("year"),
+                "category": _categorize_document(doc.get("title", ""), doc.get("url", "")),
+                "snippet": f"Source: {doc.get('source', 'unknown')}"
+            }
+        )
+
+    return {
+        "query": query,
+        "results": _sort_docs(_dedupe_docs(normalized))
+    }
+
+
+@app.post("/api/education/explain")
+def explain_education_document(payload: EducationExplainRequest):
+    lang_code = (payload.language or "en").lower()
+    if lang_code not in SUPPORTED_LANGUAGE_NAMES:
+        raise HTTPException(status_code=400, detail=f"Unsupported language: {lang_code}")
+
+    page_text = _fetch_url_text(payload.url)
+    snippet = payload.snippet or ""
+
+    llm = ChatOpenAI(temperature=0.2, model="gpt-3.5-turbo")
+    prompt = f"""
+    You are a Kenyan civic-education policy analyst.
+    Explain the document below in clear public language.
+    If source text is incomplete, say what is uncertain.
+
+    Document title: {payload.title}
+    Document URL: {payload.url or 'N/A'}
+    Search snippet: {snippet}
+    Source text excerpt:
+    {page_text if page_text else 'No extractable text available from source.'}
+
+    Return valid JSON only in this structure:
+    {{
+      "summary": "A detailed plain-language summary (4-8 sentences)",
+      "key_changes": ["Change 1", "Change 2", "Change 3"],
+      "what_is_new": "What appears new or recently updated",
+      "action_points": ["What citizens/campaign teams should check", "Any compliance deadline or practical next step"],
+      "source_note": "One sentence explaining confidence based on source quality"
+    }}
+    """
+
+    try:
+        response = llm.invoke(prompt)
+        clean_text = response.content.replace("```json", "").replace("```", "").strip()
+        parsed = json.loads(clean_text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI explanation failed: {str(e)}")
+
+    summary_en = parsed.get("summary", "")
+    key_changes_en = parsed.get("key_changes", [])
+    what_is_new_en = parsed.get("what_is_new", "")
+    action_points_en = parsed.get("action_points", [])
+    source_note_en = parsed.get("source_note", "")
+
+    if lang_code == "en":
+        summary = summary_en
+        key_changes = key_changes_en
+        what_is_new = what_is_new_en
+        action_points = action_points_en
+        source_note = source_note_en
+    else:
+        summary = translate_text(summary_en, lang_code)
+        key_changes = [translate_text(item, lang_code) for item in key_changes_en]
+        what_is_new = translate_text(what_is_new_en, lang_code)
+        action_points = [translate_text(item, lang_code) for item in action_points_en]
+        source_note = translate_text(source_note_en, lang_code)
+
+    return {
+        "title": payload.title,
+        "url": payload.url,
+        "language": lang_code,
+        "summary": summary,
+        "summary_en": summary_en,
+        "key_changes": key_changes,
+        "key_changes_en": key_changes_en,
+        "what_is_new": what_is_new,
+        "what_is_new_en": what_is_new_en,
+        "action_points": action_points,
+        "action_points_en": action_points_en,
+        "source_note": source_note,
+        "source_note_en": source_note_en
+    }
 
 # --- SECURITY & CORS ---
 ALLOWED_ORIGINS = os.getenv(

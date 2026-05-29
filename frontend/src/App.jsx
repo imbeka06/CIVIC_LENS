@@ -9,6 +9,7 @@ import DashboardHome from './components/DashboardHome';
 import DataIntake from './components/DataIntake';
 import LandingPage from './components/LandingPage';
 import PolicySimulator from './components/PolicySimulator';
+import EducationCenter from './components/EducationCenter';
 import { useLocalizedStrings } from './i18n/useLocalizedStrings';
 
 // Extract the Header into a component so we can use the location router hook
@@ -90,7 +91,9 @@ function App() {
     module4Subtitle: 'Test hypothetical regulations and observe their impact on the power map.',
     module5Title: 'Module 5: AI Explainer Bot',
     module5Subtitle: 'Translating network complexity into accessible public summaries.',
-    selectCandidate: 'Select a candidate...'
+    selectCandidate: 'Select a candidate...',
+    module6Title: 'Module 6: Learn and Educate',
+    module6Subtitle: 'Search constitutional resources, Finance Bills, and campaign laws in Kenya.'
   }), []);
 
   const s = useLocalizedStrings(englishStrings);
@@ -255,6 +258,10 @@ function App() {
                   <AIExplainer selectedCandidate={selectedCandidate} candidates={candidates} sandboxData={sandboxData} />
                 </div>
               </section>
+            } />
+
+            <Route path="/learn" element={
+              <EducationCenter />
             } />
 
             {/* New Module: Data Intake Pipeline */}

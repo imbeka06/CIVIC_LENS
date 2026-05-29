@@ -24,7 +24,11 @@ const DashboardHome = () => {
     moduleIntakeTitle: 'Data Intake Pipeline',
     moduleIntakeSubtitle: 'AI Extraction Engine',
     moduleIntakeDescription: 'Upload unstructured documents and let the LLM automatically extract financial networks.',
-    moduleIntakeDropLabel: 'Drop Document Here'
+    moduleIntakeDropLabel: 'Drop Document Here',
+    moduleLearnTitle: 'Learn and Educate',
+    moduleLearnSubtitle: 'Civic Knowledge Center',
+    moduleLearnDescription: 'Search constitutional campaign-finance resources, latest Finance Bills, and key laws passed in Kenya.',
+    moduleLearnDropLabel: 'Search Bills and Acts'
   }), []);
   const s = useLocalizedStrings(englishStrings);
 
@@ -118,6 +122,19 @@ const DashboardHome = () => {
           <div className="w-2/3 bg-slate-200 h-4 rounded-full rounded-tl-none self-start"></div>
           <div className="w-3/4 bg-purple-500 h-4 rounded-full rounded-tr-none self-end"></div>
           <div className="w-1/2 bg-purple-500 h-4 rounded-full rounded-tr-none self-end"></div>
+        </div>
+      )
+    },
+    {
+      id: "module-learn",
+      title: s.moduleLearnTitle,
+      subtitle: s.moduleLearnSubtitle,
+      description: s.moduleLearnDescription,
+      link: "/learn",
+      color: "indigo",
+      preview: (
+        <div className="flex items-center justify-center h-16 w-full mt-4 opacity-80 border border-indigo-200 rounded-lg bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider">
+          {s.moduleLearnDropLabel}
         </div>
       )
     },

@@ -1,0 +1,44 @@
+{
+  "documents": [
+    {
+      "title": "Campaign Financing Act, 2013 (Kenya)",
+      "url": "https://www.kenyalaw.org/lex/actview.xql?actid=No.%2042%20of%202013",
+      "source": "kenyalaw.org",
+      "year": 2013,
+      "category": "campaign",
+      "snippet": "Primary law on political campaign financing in Kenya."
+    },
+    {
+      "title": "Elections Act, 2011 (Kenya)",
+      "url": "https://www.kenyalaw.org/lex/actview.xql?actid=No.%2024%20of%202011",
+      "source": "kenyalaw.org",
+      "year": 2011,
+      "category": "campaign",
+      "snippet": "Core legal framework for election conduct and management."
+    },
+    {
+      "title": "Political Parties Act, 2011 (Kenya)",
+      "url": "https://www.kenyalaw.org/lex/actview.xql?actid=No.%2011%20of%202011",
+      "source": "kenyalaw.org",
+      "year": 2011,
+      "category": "campaign",
+      "snippet": "Regulates registration, governance, and funding of political parties."
+    },
+    {
+      "title": "Public Finance Management Act, 2012 (Kenya)",
+      "url": "https://www.kenyalaw.org/lex/actview.xql?actid=No.%2018%20of%202012",
+      "source": "kenyalaw.org",
+      "year": 2012,
+      "category": "finance",
+      "snippet": "Framework law for public finance planning, budgeting, and reporting."
+    },
+    {
+      "title": "Recent Finance Bill documents (Kenya Parliament search)",
+      "url": "https://www.parliament.go.ke/the-national-assembly/house-business/bills",
+      "source": "parliament.go.ke",
+      "year": 2026,
+      "category": "finance",
+      "snippet": "Official bills page where current Finance Bill records are published."
+    }
+  ]
+}

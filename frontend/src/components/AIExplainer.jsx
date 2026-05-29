@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // NEW: Added sandboxData to the props
 const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
+  const location = useLocation();
   const { language } = useLanguage();
   const englishStrings = React.useMemo(() => ({
     welcome: 'Welcome to the Civic Lens AI Explainer. Please select a specific candidate from the dropdown above to generate a multilingual financial dossier.',
@@ -34,7 +36,13 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
     generating: 'Generating multilingual dossier...',
     translationFeedbackTitle: 'Translation Quality Feedback',
     feedbackPlaceholder: 'Report wording issues or suggest a better local term...',
-    send: 'Send'
+    send: 'Send',
+    educationPromptPrefix: 'Explain this policy document in detail:',
+    keyChangesLabel: 'Key changes:',
+    whatIsNewLabel: 'What is new:',
+    actionPointsLabel: 'Action points:',
+    sourceNoteLabel: 'Source note:',
+    educationApiFail: 'Education AI engine failed to respond.'
   }), []);
   const s = useLocalizedStrings(englishStrings);
   const [messages, setMessages] = useState([
@@ -48,6 +56,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackStatus, setFeedbackStatus] = useState('');
   const messagesEndRef = useRef(null);
+  const educationKeyRef = useRef('');
 
   const latestAnalysis = [...messages].reverse().find(
     (msg) => msg.role === 'bot' && msg.type === 'analysis'
@@ -86,6 +95,65 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    const educationDoc = location.state?.educationDoc;
+    if (!educationDoc || !educationDoc.title) return;
+
+    const docKey = `${educationDoc.url || educationDoc.title}:${language}`;
+    if (educationKeyRef.current === docKey) return;
+    educationKeyRef.current = docKey;
+
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: `${s.educationPromptPrefix} ${educationDoc.title}`
+    }]);
+    setIsLoading(true);
+
+    fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/education/explain`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: educationDoc.title,
+        url: educationDoc.url,
+        snippet: educationDoc.snippet || '',
+        language
+      })
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(s.educationApiFail);
+        return res.json();
+      })
+      .then((data) => {
+        const bullets = [
+          `${s.keyChangesLabel} ${(data.key_changes || []).join(' | ')}`,
+          `${s.whatIsNewLabel} ${data.what_is_new || ''}`,
+          `${s.actionPointsLabel} ${(data.action_points || []).join(' | ')}`,
+          `${s.sourceNoteLabel} ${data.source_note || ''}`
+        ].filter(Boolean);
+
+        setMessages(prev => [...prev, {
+          role: 'bot',
+          type: 'analysis',
+          english: data.summary_en || data.summary || '',
+          swahili: data.language === 'sw' ? (data.summary || '') : '',
+          analysis: data.summary || data.summary_en || '',
+          analysis_language: data.language || language,
+          infographic: bullets,
+          infographic_translated: bullets
+        }]);
+      })
+      .catch((err) => {
+        setMessages(prev => [...prev, {
+          role: 'bot',
+          type: 'error',
+          content: `${s.systemError} ${err.message}`
+        }]);
+      })
+      .finally(() => setIsLoading(false));
+  }, [location.state, language, s.educationPromptPrefix, s.educationApiFail, s.keyChangesLabel, s.whatIsNewLabel, s.actionPointsLabel, s.sourceNoteLabel, s.systemError]);
 
   // Trigger AI when a new candidate is selected
   useEffect(() => {
