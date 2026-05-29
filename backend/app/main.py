@@ -8,8 +8,8 @@ import geopandas as gpd
 import json
 import os
 import pandas as pd
-from datetime import date  # Added for timestamping new donations
-from typing import Optional
+from datetime import date, datetime  # Added for timestamping new donations
+from typing import Optional, Dict
 
 from dotenv import load_dotenv
 from pathlib import Path
@@ -41,6 +41,41 @@ class TranslationRequest(BaseModel):
     target_lang: str = "sw"
 
 
+class TranslationFeedbackRequest(BaseModel):
+    source_text: str
+    translated_text: str
+    target_lang: str
+    comment: Optional[str] = None
+
+
+def _data_dir() -> Path:
+    return Path(__file__).resolve().parent.parent / "data"
+
+
+def load_translation_glossary() -> Dict[str, Dict[str, str]]:
+    glossary_path = _data_dir() / "translation_glossary.json"
+    if not glossary_path.exists():
+        return {}
+    try:
+        with open(glossary_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def build_glossary_instruction(target_lang: str) -> str:
+    glossary = load_translation_glossary()
+    terms = glossary.get(target_lang, {})
+    if not terms:
+        return ""
+
+    entries = "\n".join([f"- {k} => {v}" for k, v in terms.items()])
+    return f"""
+    Use this mandatory terminology where relevant:
+    {entries}
+    """
+
+
 def translate_text(text: str, target_lang: str) -> str:
     if not text:
         return ""
@@ -54,10 +89,12 @@ def translate_text(text: str, target_lang: str) -> str:
 
     llm = ChatOpenAI(temperature=0.2, model="gpt-3.5-turbo")
     lang_name = SUPPORTED_LANGUAGE_NAMES[lang_code]
+    glossary_instruction = build_glossary_instruction(lang_code)
     prompt = f"""
     Translate the following civic-finance text into {lang_name}.
     Keep amounts, names, percentages, and meaning exactly the same.
     Return only the translated sentence without quotes.
+    {glossary_instruction}
 
     TEXT:
     {text}
@@ -75,6 +112,32 @@ def translate_content(payload: TranslationRequest):
         "translated_text": translated,
         "target_lang": lang_code
     }
+
+
+@app.post("/api/translation-feedback")
+def submit_translation_feedback(payload: TranslationFeedbackRequest):
+    lang_code = (payload.target_lang or "").lower()
+    if lang_code not in SUPPORTED_LANGUAGE_NAMES:
+        raise HTTPException(status_code=400, detail=f"Unsupported language: {lang_code}")
+
+    feedback_path = _data_dir() / "translation_feedback.jsonl"
+    feedback_path.parent.mkdir(parents=True, exist_ok=True)
+
+    feedback_record = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "target_lang": lang_code,
+        "source_text": payload.source_text,
+        "translated_text": payload.translated_text,
+        "comment": payload.comment or ""
+    }
+
+    try:
+        with open(feedback_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(feedback_record, ensure_ascii=False) + "\n")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save feedback: {str(e)}")
+
+    return {"message": "Translation feedback saved", "target_lang": lang_code}
 
 # --- SECURITY & CORS ---
 ALLOWED_ORIGINS = os.getenv(

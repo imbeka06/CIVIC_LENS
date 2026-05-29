@@ -12,7 +12,42 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackStatus, setFeedbackStatus] = useState('');
   const messagesEndRef = useRef(null);
+
+  const latestAnalysis = [...messages].reverse().find(
+    (msg) => msg.role === 'bot' && msg.type === 'analysis'
+  );
+
+  const handleTranslationFeedback = async () => {
+    if (!latestAnalysis) return;
+    setFeedbackStatus('Submitting feedback...');
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/translation-feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          source_text: latestAnalysis.english || '',
+          translated_text: latestAnalysis.analysis || latestAnalysis.english || '',
+          target_lang: latestAnalysis.analysis_language || language,
+          comment: feedbackText
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Could not submit translation feedback.');
+      }
+
+      setFeedbackStatus('Feedback saved. Thank you for helping improve language quality.');
+      setFeedbackText('');
+    } catch (err) {
+      setFeedbackStatus(err.message || 'Feedback submission failed.');
+    }
+  };
 
   // Auto-scroll to the newest message
   useEffect(() => {
@@ -203,6 +238,33 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Translation QA Feedback Panel */}
+      {latestAnalysis && (
+        <div className="border-t border-slate-200 bg-white p-4">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+            Translation Quality Feedback
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              placeholder="Report wording issues or suggest a better local term..."
+              className="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700"
+            />
+            <button
+              onClick={handleTranslationFeedback}
+              className="px-4 py-2 rounded-md bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700"
+            >
+              Send
+            </button>
+          </div>
+          {feedbackStatus && (
+            <p className="text-xs text-slate-500 mt-2">{feedbackStatus}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

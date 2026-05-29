@@ -1,0 +1,39 @@
+{
+  "sw": {
+    "Funding Concentration Index": "Kielezo cha Msongamano wa Ufadhili",
+    "campaign finance": "ufadhili wa kampeni",
+    "donor": "mfadhili",
+    "candidate": "mgombea",
+    "war chest": "hazina ya kampeni"
+  },
+  "luo": {
+    "campaign finance": "pesa mar kampeni",
+    "donor": "jacham",
+    "candidate": "jachandruok",
+    "network": "netwak"
+  },
+  "kikuyu": {
+    "campaign finance": "mbeca cia kampeni",
+    "donor": "mũheani wa mbeca",
+    "candidate": "mũthũngi",
+    "network": "mũtandao"
+  },
+  "kamba": {
+    "campaign finance": "mbesa sya kampeni",
+    "donor": "mũheani wa mbesa",
+    "candidate": "mũthiani",
+    "network": "network"
+  },
+  "giriama": {
+    "campaign finance": "ufadhili wa kampeni",
+    "donor": "mtoaji wa pesa",
+    "candidate": "mgombezi",
+    "network": "mtandao"
+  },
+  "kalenjin": {
+    "campaign finance": "finansia ne kampeni",
+    "donor": "koityo ne boisiet",
+    "candidate": "koityo ne kurget",
+    "network": "netwak"
+  }
+}
