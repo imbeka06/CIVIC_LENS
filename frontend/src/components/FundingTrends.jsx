@@ -2,10 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // NEW: Accept the sandboxData prop
 const FundingTrends = ({ sandboxData }) => {
   const [chartData, setChartData] = useState([]);
+  const englishStrings = React.useMemo(() => ({
+    unknownCandidate: 'Unknown Candidate',
+    loading: 'Loading Campaign War Chests...',
+    chartTitle: 'Campaign War Chests',
+    totalRaisedLabel: 'Total Raised',
+    totalRaisedLegend: 'Total Raised (KSh)',
+    candidatePrefix: 'Candidate'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
 
   useEffect(() => {
     // --- BRANCH 1: ISOLATED SANDBOX MODE ---
@@ -14,7 +24,7 @@ const FundingTrends = ({ sandboxData }) => {
       
       // Calculate totals directly from the uploaded JSON
       sandboxData.donations.forEach(donation => {
-        const candidateName = donation.candidate_name || "Unknown Candidate";
+        const candidateName = donation.candidate_name || s.unknownCandidate;
         const amount = Number(donation.amount) || 0;
         fundingMap[candidateName] = (fundingMap[candidateName] || 0) + amount;
       });
@@ -45,7 +55,7 @@ const FundingTrends = ({ sandboxData }) => {
           const candidatesArr = Object.keys(fundingMap).map(id => {
             const node = data.nodes.find(n => String(n.id) === String(id));
             return {
-              name: node ? node.name : `Candidate ${id}`,
+              name: node ? node.name : `${s.candidatePrefix} ${id}`,
               total: fundingMap[id]
             };
           });
@@ -59,7 +69,7 @@ const FundingTrends = ({ sandboxData }) => {
   }, [sandboxData]); // Re-run this effect if the sandbox data changes
 
   if (chartData.length === 0) {
-    return <div className="p-10 text-center text-slate-400">Loading Campaign War Chests...</div>;
+    return <div className="p-10 text-center text-slate-400">{s.loading}</div>;
   }
 
   return (
@@ -67,7 +77,7 @@ const FundingTrends = ({ sandboxData }) => {
       
       {/* Exact Header from your screenshot */}
       <h3 style={{ color: '#1e3a8a', fontSize: '18px', fontWeight: 'bold', marginBottom: '20px' }}>
-        Campaign War Chests
+        {s.chartTitle}
       </h3>
       
       {/* The Recharts Graph */}
@@ -93,7 +103,7 @@ const FundingTrends = ({ sandboxData }) => {
             
             {/* Tooltip on Hover */}
             <Tooltip 
-                formatter={(value) => [`KSh ${value.toLocaleString()}`, 'Total Raised']}
+              formatter={(value) => [`KSh ${value.toLocaleString()}`, s.totalRaisedLabel]}
                 cursor={{ fill: '#f3f4f6' }}
             />
             
@@ -102,7 +112,7 @@ const FundingTrends = ({ sandboxData }) => {
                 verticalAlign="bottom" 
                 height={36}
                 payload={[
-                  { id: 'total', type: 'square', value: 'Total Raised (KSh)', color: '#22c55e' }
+                  { id: 'total', type: 'square', value: s.totalRaisedLegend, color: '#22c55e' }
                 ]}
             />
             

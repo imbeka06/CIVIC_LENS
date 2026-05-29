@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import L from 'leaflet'; 
 import 'leaflet/dist/leaflet.css';
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // Fix for default Leaflet icons in Vite/React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -14,6 +15,17 @@ L.Icon.Default.mergeOptions({
 // NEW: Accept sandboxData as a prop
 const MapVisualization = ({ sandboxData }) => {
     const [geoData, setGeoData] = useState(null);
+    const englishStrings = React.useMemo(() => ({
+        loadingMap: 'Loading Geospatial Data...',
+        legendTitle: 'Funding Influence (FCI %)',
+        highConcentration: 'High Concentration (>15%)',
+        significant: 'Significant (5-15%)',
+        minimal: 'Minimal (<5%)',
+        unknownTerritory: 'Unknown Territory',
+        totalRaised: 'Total Raised:',
+        fciScore: 'FCI Score:'
+    }), []);
+    const s = useLocalizedStrings(englishStrings);
 
     useEffect(() => {
         // We always fetch from the backend to get the actual GeoJSON map shapes
@@ -99,7 +111,7 @@ const MapVisualization = ({ sandboxData }) => {
     if (!geoData) return (
         <div className="flex items-center justify-center h-[600px] bg-slate-50 border border-slate-200 rounded-xl">
             <div className="text-slate-500 text-center p-20 animate-pulse font-sans">
-                Loading Geospatial Data...
+                {s.loadingMap}
             </div>
         </div>
     );
@@ -109,19 +121,19 @@ const MapVisualization = ({ sandboxData }) => {
             
             {/* Legend Overlay - Light Theme */}
             <div className="absolute bottom-6 left-6 z-[1000] bg-white/95 p-4 border border-slate-200 rounded-lg shadow-md text-xs text-slate-700 font-sans">
-                <p className="font-bold text-blue-800 mb-2 uppercase tracking-tight">Funding Influence (FCI %)</p>
+                <p className="font-bold text-blue-800 mb-2 uppercase tracking-tight">{s.legendTitle}</p>
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-[#b91c1c] rounded-sm"></div> 
-                        <span>High Concentration (&gt;15%)</span>
+                        <span>{s.highConcentration}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-[#ef4444] rounded-sm"></div> 
-                        <span>Significant (5-15%)</span>
+                        <span>{s.significant}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-[#3b82f6] rounded-sm"></div> 
-                        <span>Minimal ({"<"}5%)</span>
+                        <span>{s.minimal}</span>
                     </div>
                 </div>
             </div>
@@ -145,7 +157,7 @@ const MapVisualization = ({ sandboxData }) => {
                         data={geoData} 
                         style={getStyle} 
                         onEachFeature={(feature, layer) => {
-                            const name = feature.properties.COUNTY_NAM || feature.properties.COUNTY || "Unknown Territory";
+                            const name = feature.properties.COUNTY_NAM || feature.properties.COUNTY || s.unknownTerritory;
                             const raised = feature.properties.total_raised || 0;
                             const score = feature.properties.fci_score || 0;
 
@@ -153,8 +165,8 @@ const MapVisualization = ({ sandboxData }) => {
                                 <div style="color: #1e293b; font-family: system-ui, sans-serif; min-width: 150px;">
                                     <h4 style="margin:0; border-bottom: 2px solid #3b82f6; padding-bottom: 4px; font-weight: bold; text-transform: uppercase;">${name}</h4>
                                     <div style="margin-top: 8px;">
-                                        <p style="margin: 4px 0;"><strong>Total Raised:</strong> KSh ${raised.toLocaleString()}</p>
-                                        <p style="margin: 4px 0;"><strong>FCI Score:</strong> ${score}%</p>
+                                        <p style="margin: 4px 0;"><strong>${s.totalRaised}</strong> KSh ${raised.toLocaleString()}</p>
+                                        <p style="margin: 4px 0;"><strong>${s.fciScore}</strong> ${score}%</p>
                                     </div>
                                 </div>
                             `);

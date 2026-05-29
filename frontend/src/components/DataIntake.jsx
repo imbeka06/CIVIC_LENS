@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Added for the navigation button
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // NEW: Accept the setSandboxData function from App.jsx
 const DataIntake = ({ setSandboxData }) => {
@@ -7,6 +8,25 @@ const DataIntake = ({ setSandboxData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [aiResult, setAiResult] = useState(null);
   const [error, setError] = useState(null);
+
+  const englishStrings = React.useMemo(() => ({
+    pageTitle: 'Data Intake Pipeline',
+    pageSubtitle: 'AI-Powered Entity Extraction for Raw Financial Documents.',
+    uploadTitle: 'Upload Raw Document',
+    uploadBody: 'Upload an unstructured text file (e.g., a news article or scanned declaration). The AI Engine will extract Candidates, Donors, and Amounts automatically.',
+    processing: 'AI is processing document...',
+    extractButton: 'Extract Data via LLM',
+    statusTitle: 'System Status',
+    sandboxActivated: 'Sandbox Activated',
+    awaitingInput: 'Awaiting Input',
+    analyzing: 'Analyzing linguistic structures...',
+    extractionComplete: 'Extraction Complete!',
+    extractionSummary: 'Entities extracted and isolated in the Sandbox. Your global database has not been altered.',
+    analyzeSandbox: 'Analyze Data in Sandbox',
+    rawPayload: 'Raw JSON Payload',
+    awaitingUpload: 'Awaiting document upload...'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -58,18 +78,17 @@ const DataIntake = ({ setSandboxData }) => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="border-l-4 border-blue-600 pl-4">
-        <h2 className="text-2xl font-bold text-slate-800">Data Intake Pipeline</h2>
-        <p className="text-slate-500 text-sm italic">AI-Powered Entity Extraction for Raw Financial Documents.</p>
+        <h2 className="text-2xl font-bold text-slate-800">{s.pageTitle}</h2>
+        <p className="text-slate-500 text-sm italic">{s.pageSubtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Left Column: Upload Zone */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">Upload Raw Document</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-4">{s.uploadTitle}</h3>
           <p className="text-sm text-slate-500 mb-6">
-            Upload an unstructured text file (e.g., a news article or scanned declaration). 
-            The AI Engine will extract Candidates, Donors, and Amounts automatically.
+            {s.uploadBody}
           </p>
 
           <form onSubmit={handleUpload} className="space-y-4">
@@ -87,7 +106,7 @@ const DataIntake = ({ setSandboxData }) => {
               disabled={!file || isLoading}
               className={`w-full py-3 rounded-lg font-bold text-white transition-colors ${!file || isLoading ? 'bg-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
-              {isLoading ? 'AI is processing document...' : 'Extract Data via LLM'}
+              {isLoading ? s.processing : s.extractButton}
             </button>
           </form>
 
@@ -101,9 +120,9 @@ const DataIntake = ({ setSandboxData }) => {
         {/* Right Column: AI Visual Verification & Success State */}
         <div className="bg-slate-900 rounded-xl shadow-sm p-8 flex flex-col h-[500px]">
           <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
-            <h3 className="text-lg font-bold text-white">System Status</h3>
+            <h3 className="text-lg font-bold text-white">{s.statusTitle}</h3>
             <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full border ${aiResult ? 'bg-green-900/30 text-green-400 border-green-700/50' : 'bg-slate-800 text-blue-400 border-slate-700'}`}>
-              {aiResult ? 'Sandbox Activated' : 'Awaiting Input'}
+              {aiResult ? s.sandboxActivated : s.awaitingInput}
             </span>
           </div>
 
@@ -111,7 +130,7 @@ const DataIntake = ({ setSandboxData }) => {
             {isLoading ? (
               <div className="flex items-center gap-3 text-slate-500 h-full justify-center">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
-                Analyzing linguistic structures...
+                {s.analyzing}
               </div>
             ) : aiResult ? (
               // NEW UX: The Green Success State
@@ -120,25 +139,25 @@ const DataIntake = ({ setSandboxData }) => {
                   <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-white mb-2">Extraction Complete!</h4>
+                  <h4 className="text-xl font-bold text-white mb-2">{s.extractionComplete}</h4>
                   <p className="text-slate-400 text-sm max-w-xs mx-auto">
-                    Entities extracted and isolated in the Sandbox. Your global database has not been altered.
+                    {s.extractionSummary}
                   </p>
                 </div>
                 
                 <Link to="/hub" className="w-full py-3 mt-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-purple-900/20">
-                  Analyze Data in Sandbox →
+                  {s.analyzeSandbox} →
                 </Link>
 
                 {/* Keep a tiny preview for the developer */}
                 <div className="w-full mt-4 text-left overflow-hidden h-20 opacity-30 hover:opacity-100 transition-opacity">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Raw JSON Payload</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{s.rawPayload}</p>
                   <pre className="text-[10px] font-mono text-blue-300 overflow-y-auto h-full">{JSON.stringify(aiResult, null, 2)}</pre>
                 </div>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-slate-600 text-sm">
-                Awaiting document upload...
+                {s.awaitingUpload}
               </div>
             )}
           </div>

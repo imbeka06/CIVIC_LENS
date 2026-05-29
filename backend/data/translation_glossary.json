@@ -35,5 +35,11 @@
     "donor": "koityo ne boisiet",
     "candidate": "koityo ne kurget",
     "network": "netwak"
+  },
+  "luhya": {
+    "campaign finance": "esipesa sia kampeni",
+    "donor": "omuhasi",
+    "candidate": "omucheni",
+    "network": "omukutu"
   }
 }

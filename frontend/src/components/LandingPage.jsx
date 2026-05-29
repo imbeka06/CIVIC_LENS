@@ -2,9 +2,23 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SUPPORTED_LANGUAGES } from '../i18n/languages';
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 const LandingPage = () => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const englishStrings = React.useMemo(() => ({
+    selectLanguage: 'Select language',
+    titleLine1: "Unveil Your Country's",
+    titleLine2: 'Funding Landscape',
+    intro: 'Choose your analytical path. Explore our global database of political networks, or upload your own raw documents to assess localized financial relationships.',
+    card1Title: 'Civic Lens Lab',
+    card1Kicker: 'Explore the Current Trend',
+    card1Body: 'Dive into the aggregated national database. Interact with the 5 analytical modules to view historical funding trends, geospatial wealth distribution, and vast network connections.',
+    card2Title: 'AI Extraction',
+    card2Kicker: "Be Your Country's Assessor",
+    card2Body: "Upload unstructured text or raw financial documents. Our LLM will extract the entities and generate an isolated, interactive dashboard exclusively for your file's data."
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center animate-fade-in relative overflow-hidden">
@@ -14,7 +28,7 @@ const LandingPage = () => {
 
       <div className="absolute top-6 right-6 z-20 bg-white/90 border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
         <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">
-          {t('landingLanguageLabel')}
+          {s.selectLanguage}
         </label>
         <select
           value={language}
@@ -29,13 +43,13 @@ const LandingPage = () => {
 
       <div className="text-center mb-16 z-10">
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-4 uppercase">
-          {t('landingTitleLine1')} <br/>
+          {s.titleLine1} <br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
-            {t('landingTitleLine2')}
+            {s.titleLine2}
           </span>
         </h1>
         <p className="text-slate-500 max-w-2xl mx-auto">
-          {t('landingIntro')}
+          {s.intro}
         </p>
       </div>
 
@@ -51,10 +65,10 @@ const LandingPage = () => {
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
 
-          <h2 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:text-emerald-700 transition-colors">{t('landingCard1Title')}</h2>
-          <p className="text-emerald-600 font-bold uppercase tracking-widest text-[11px] mb-4">{t('landingCard1Kicker')}</p>
+          <h2 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:text-emerald-700 transition-colors">{s.card1Title}</h2>
+          <p className="text-emerald-600 font-bold uppercase tracking-widest text-[11px] mb-4">{s.card1Kicker}</p>
           <p className="text-slate-500 text-sm leading-relaxed">
-            {t('landingCard1Body')}
+            {s.card1Body}
           </p>
         </Link>
 
@@ -68,10 +82,10 @@ const LandingPage = () => {
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
 
-          <h2 className="text-3xl font-extrabold text-white mb-2 group-hover:text-purple-300 transition-colors">{t('landingCard2Title')}</h2>
-          <p className="text-purple-400 font-bold uppercase tracking-widest text-[11px] mb-4">{t('landingCard2Kicker')}</p>
+          <h2 className="text-3xl font-extrabold text-white mb-2 group-hover:text-purple-300 transition-colors">{s.card2Title}</h2>
+          <p className="text-purple-400 font-bold uppercase tracking-widest text-[11px] mb-4">{s.card2Kicker}</p>
           <p className="text-slate-400 text-sm leading-relaxed">
-            {t('landingCard2Body')}
+            {s.card2Body}
           </p>
         </Link>
 

@@ -5,7 +5,8 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'kikuyu', label: 'Gikuyu (Kikuyu)' },
   { code: 'kamba', label: 'Kikamba (Kamba)' },
   { code: 'giriama', label: 'Kigiriama (Giriama)' },
-  { code: 'kalenjin', label: 'Kalenjin' }
+  { code: 'kalenjin', label: 'Kalenjin' },
+  { code: 'luhya', label: 'Luhya' }
 ];
 
 export const DEFAULT_LANGUAGE = 'en';

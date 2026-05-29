@@ -9,14 +9,23 @@ import DashboardHome from './components/DashboardHome';
 import DataIntake from './components/DataIntake';
 import LandingPage from './components/LandingPage';
 import PolicySimulator from './components/PolicySimulator';
-import { useLanguage } from './i18n/LanguageContext';
+import { useLocalizedStrings } from './i18n/useLocalizedStrings';
 
 // Extract the Header into a component so we can use the location router hook
 const TopHeader = ({ sandboxMode, clearSandbox }) => {
   const location = useLocation();
   const isLanding = location.pathname === '/';
   const isHub = location.pathname === '/hub';
-  const { t } = useLanguage();
+  const englishStrings = React.useMemo(() => ({
+    appTitle: 'CIVIC LENS LABORATORY',
+    appTagline: 'Advanced Financial Intelligence Suite',
+    returnToHub: 'Return to Hub',
+    statusLabel: 'SYSTEM STATUS:',
+    statusSandbox: 'ISOLATED SANDBOX',
+    exitSandbox: 'EXIT SANDBOX',
+    statusGlobal: 'GLOBAL DATABASE'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
 
   return (
     <header className="border-b border-slate-200 bg-white p-6 shadow-sm sticky top-0 z-[2000]">
@@ -24,18 +33,18 @@ const TopHeader = ({ sandboxMode, clearSandbox }) => {
         <div>
           <Link to="/">
             <h1 className="text-3xl font-bold text-slate-800 tracking-tight hover:text-blue-700 transition-colors">
-              {t('appTitle')}
+              {s.appTitle}
             </h1>
           </Link>
           <p className="text-slate-500 text-xs uppercase tracking-widest mt-1 font-semibold">
-            {t('appTagline')}
+            {s.appTagline}
           </p>
         </div>
         <div className="flex items-center gap-4">
           {/* Show a Return button if we are inside a module */}
           {(!isLanding && !isHub) && (
             <Link to="/hub" className="text-sm font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 transition-colors">
-              ← {t('returnToHub')}
+              ← {s.returnToHub}
             </Link>
           )}
           
@@ -43,15 +52,15 @@ const TopHeader = ({ sandboxMode, clearSandbox }) => {
           {sandboxMode ? (
             <div className="flex items-center gap-2">
               <div className="px-4 py-2 border border-purple-200 rounded-full bg-purple-50 text-[10px] animate-pulse">
-                <span className="text-purple-700 font-bold">{t('statusLabel')}</span> <span className="text-purple-600">{t('statusSandbox')}</span>
+                <span className="text-purple-700 font-bold">{s.statusLabel}</span> <span className="text-purple-600">{s.statusSandbox}</span>
               </div>
               <button onClick={clearSandbox} className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-full border border-red-200 transition-colors shadow-sm">
-                {t('exitSandbox')}
+                {s.exitSandbox}
               </button>
             </div>
           ) : (
             <div className="px-4 py-2 border border-blue-100 rounded-full bg-blue-50 text-[10px]">
-              <span className="text-blue-700 font-bold">{t('statusLabel')}</span> <span className="text-blue-600">{t('statusGlobal')}</span>
+              <span className="text-blue-700 font-bold">{s.statusLabel}</span> <span className="text-blue-600">{s.statusGlobal}</span>
             </div>
           )}
         </div>
@@ -63,7 +72,28 @@ const TopHeader = ({ sandboxMode, clearSandbox }) => {
 function App() {
   const [selectedCandidate, setSelectedCandidate] = useState("all");
   const [globalCandidates, setGlobalCandidates] = useState([]);
-  const { language } = useLanguage();
+
+  const englishStrings = React.useMemo(() => ({
+    module1Title: 'Module 1: Funding Trends',
+    module1Subtitle: 'Top war chests calculated from network donation data.',
+    module2Title: 'Module 2: Network Intelligence Engine',
+    module2Subtitle: 'Filtering financial nodes and edge-weight relationships.',
+    focusCandidate: 'Focus Candidate',
+    displayFullNetwork: 'Display Full Network',
+    visualWeights: 'Visual Weights',
+    edgeThickness: 'Edge Thickness:',
+    edgeThicknessDesc: 'Scaled logarithmically. Thicker lines represent high-value transfers.',
+    edgeColor: 'Edge Color:',
+    edgeColorDesc: 'Stronger relationships fade from gray to deep blue.',
+    module3Title: 'Module 3: Geographic Influence Engine',
+    module4Title: 'Module 4: Policy Simulator',
+    module4Subtitle: 'Test hypothetical regulations and observe their impact on the power map.',
+    module5Title: 'Module 5: AI Explainer Bot',
+    module5Subtitle: 'Translating network complexity into accessible public summaries.',
+    selectCandidate: 'Select a candidate...'
+  }), []);
+
+  const s = useLocalizedStrings(englishStrings);
   
   // THE NEW BRAIN: Short-Term Memory for the Isolated Sandbox
   const [sandboxData, setSandboxData] = useState(null);
@@ -116,8 +146,8 @@ function App() {
             <Route path="/module-1" element={
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4">
-                  <h2 className="text-2xl font-bold text-slate-800">Module 1: Funding Trends</h2>
-                  <p className="text-slate-500 text-sm italic">Top war chests calculated from network donation data.</p>
+                  <h2 className="text-2xl font-bold text-slate-800">{s.module1Title}</h2>
+                  <p className="text-slate-500 text-sm italic">{s.module1Subtitle}</p>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8">
                   {/* Passing sandboxData down */}
@@ -131,18 +161,18 @@ function App() {
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4 flex justify-between items-center">
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Module 2: Network Intelligence Engine</h2>
-                    <p className="text-slate-500 text-sm italic">Filtering financial nodes and edge-weight relationships.</p>
+                    <h2 className="text-2xl font-bold text-slate-800">{s.module2Title}</h2>
+                    <p className="text-slate-500 text-sm italic">{s.module2Subtitle}</p>
                   </div>
                   
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Focus Candidate</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">{s.focusCandidate}</label>
                     <select 
                       value={selectedCandidate}
                       onChange={(e) => setSelectedCandidate(e.target.value)}
                       className="bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     >
-                      <option value="all">Display Full Network</option>
+                      <option value="all">{s.displayFullNetwork}</option>
                       {candidates.map(c => (
                         <option key={c.candidate_id} value={c.candidate_id}>{c.full_name || c.name}</option>
                       ))}
@@ -153,12 +183,12 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="md:col-span-1 space-y-4">
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                      <h4 className="font-bold text-blue-800 text-xs uppercase mb-2">Visual Weights</h4>
+                      <h4 className="font-bold text-blue-800 text-xs uppercase mb-2">{s.visualWeights}</h4>
                       <p className="text-[11px] text-blue-900 leading-relaxed">
-                        <strong>Edge Thickness:</strong> Scaled logarithmically. Thicker lines represent high-value transfers.
+                        <strong>{s.edgeThickness}</strong> {s.edgeThicknessDesc}
                       </p>
                       <p className="text-[11px] text-blue-900 leading-relaxed mt-2">
-                        <strong>Edge Color:</strong> Stronger relationships fade from gray to deep blue.
+                        <strong>{s.edgeColor}</strong> {s.edgeColorDesc}
                       </p>
                     </div>
                   </div>
@@ -175,7 +205,7 @@ function App() {
             <Route path="/module-3" element={
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4">
-                  <h2 className="text-2xl font-bold text-slate-800">Module 3: Geographic Influence Engine</h2>
+                  <h2 className="text-2xl font-bold text-slate-800">{s.module3Title}</h2>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                   {/* Passing sandboxData down */}
@@ -188,8 +218,8 @@ function App() {
             <Route path="/module-4" element={
               <section className="space-y-6">
                 <div className="border-l-4 border-rose-600 pl-4">
-                  <h2 className="text-2xl font-bold text-slate-800">Module 4: Policy Simulator</h2>
-                  <p className="text-slate-500 text-sm italic">Test hypothetical regulations and observe their impact on the power map.</p>
+                  <h2 className="text-2xl font-bold text-slate-800">{s.module4Title}</h2>
+                  <p className="text-slate-500 text-sm italic">{s.module4Subtitle}</p>
                 </div>
                 {/* Passing sandboxData down */}
                 <PolicySimulator sandboxData={sandboxData} />
@@ -201,18 +231,18 @@ function App() {
               <section className="space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4 flex justify-between items-center">
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Module 5: AI Explainer Bot</h2>
-                    <p className="text-slate-500 text-sm italic">Translating network complexity into accessible public summaries.</p>
+                    <h2 className="text-2xl font-bold text-slate-800">{s.module5Title}</h2>
+                    <p className="text-slate-500 text-sm italic">{s.module5Subtitle}</p>
                   </div>
                   
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Focus Candidate</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">{s.focusCandidate}</label>
                     <select 
                       value={selectedCandidate}
                       onChange={(e) => setSelectedCandidate(e.target.value)}
                       className="bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     >
-                      <option value="all">Select a candidate...</option>
+                      <option value="all">{s.selectCandidate}</option>
                       {candidates.map(c => (
                         <option key={c.candidate_id} value={c.candidate_id}>{c.full_name || c.name}</option>
                       ))}

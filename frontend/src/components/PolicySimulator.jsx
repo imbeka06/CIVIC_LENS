@@ -1,8 +1,57 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // NEW: Accept the sandboxData prop
 const PolicySimulator = ({ sandboxData }) => {
+  const englishStrings = useMemo(() => ({
+    unknownCandidate: 'Unknown Candidate',
+    unknownDonor: 'Unknown Donor',
+    publicFund: 'Public Fund',
+    controlCorporateTitle: 'Ban Corporate Gifts',
+    controlCorporateDesc: 'Remove all Corporate donor edges from the network',
+    status: 'Status:',
+    active: 'ACTIVE',
+    inactive: 'INACTIVE',
+    controlCapTitle: 'Donation Cap',
+    controlCapDesc: 'Limit maximum donation per individual',
+    capLabel: 'Cap:',
+    unlimited: 'Unlimited',
+    controlPublicTitle: 'Public Funding',
+    controlPublicDesc: 'Inject small-dollar public donations',
+    injection: 'Injection:',
+    injectionSuffix: 'of total funds',
+    impactTitle: 'Regulatory Impact Assessment',
+    fundsRemoved: 'Funds Removed',
+    baselineSuffix: 'of baseline',
+    networkDensity: 'Network Density',
+    edgesRetained: 'Edges retained after simulation',
+    baselineNetwork: 'Baseline Network',
+    originalState: 'Original state',
+    simulatedNetwork: 'Simulated Network',
+    afterRegulations: 'After regulations',
+    topCandidates: 'Top 5 Candidates: Centrality Shift',
+    baseline: 'Baseline:',
+    after: 'After:',
+    change: 'Change',
+    baselineGraphTitle: 'Baseline Network',
+    baselineConnections: 'connections',
+    nodesWord: 'nodes',
+    edgesWord: 'edges',
+    simulatedGraphTitle: 'Simulated Network',
+    loading: 'Loading...',
+    legendTitle: 'Visualization Legend',
+    nodeTypes: 'Node Types',
+    candidate: 'Candidate',
+    donor: 'Donor',
+    edgeThickness: 'Edge Thickness',
+    edgeThicknessDesc: 'Logarithmic scale based on donation amount',
+    edgeColor: 'Edge Color',
+    edgeColorDesc: 'Darker blue = larger donations',
+    centrality: 'Centrality'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
+
   // Control states
   const [corporateBan, setCorporateBan] = useState(false);
   const [donationCap, setDonationCap] = useState(null);
@@ -23,8 +72,8 @@ const PolicySimulator = ({ sandboxData }) => {
     console.log("🔍 Converting sandbox donations to network:", donations);
 
     donations.forEach(don => {
-      const cName = don.candidate_name || "Unknown Candidate";
-      const dName = don.donor_name || "Unknown Donor";
+      const cName = don.candidate_name || s.unknownCandidate;
+      const dName = don.donor_name || s.unknownDonor;
       
       // Generate safe IDs matching our backend logic
       const cId = cName.toLowerCase().replace(/ /g, "_").substring(0, 50);
@@ -115,7 +164,7 @@ const PolicySimulator = ({ sandboxData }) => {
         
         uniqueCandidates.forEach(candidate => {
           filteredDonations.push({
-            donor_name: "Public Fund",
+            donor_name: s.publicFund,
             candidate_name: candidate,
             amount: injectionPerCandidate
           });
@@ -183,8 +232,8 @@ const PolicySimulator = ({ sandboxData }) => {
         <div className="bg-gradient-to-br from-rose-50 to-red-50 border border-rose-200 rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">↓ Ban Corporate Gifts</h3>
-              <p className="text-xs text-rose-700 mt-1">Remove all Corporate donor edges from the network</p>
+              <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">↓ {s.controlCorporateTitle}</h3>
+              <p className="text-xs text-rose-700 mt-1">{s.controlCorporateDesc}</p>
             </div>
             <div className="relative inline-flex h-8 w-14 items-center rounded-full bg-rose-200 transition-colors"
               style={{ backgroundColor: corporateBan ? '#dc2626' : '#fecaca' }}>
@@ -198,15 +247,15 @@ const PolicySimulator = ({ sandboxData }) => {
             </div>
           </div>
           <div className="bg-white bg-opacity-60 px-3 py-2 rounded text-xs text-rose-800 font-mono">
-            Status: <span className="font-bold">{corporateBan ? 'ACTIVE' : 'INACTIVE'}</span>
+            {s.status} <span className="font-bold">{corporateBan ? s.active : s.inactive}</span>
           </div>
         </div>
 
         {/* Control 2: Donation Cap Slider */}
         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-6 shadow-sm">
           <div className="mb-4">
-            <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wider">💰 Donation Cap</h3>
-            <p className="text-xs text-blue-700 mt-1">Limit maximum donation per individual</p>
+            <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wider">💰 {s.controlCapTitle}</h3>
+            <p className="text-xs text-blue-700 mt-1">{s.controlCapDesc}</p>
           </div>
           <div className="space-y-3">
             <input
@@ -222,8 +271,8 @@ const PolicySimulator = ({ sandboxData }) => {
               className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
             <div className="bg-white bg-opacity-60 px-3 py-2 rounded text-xs text-blue-800 font-mono">
-              Cap: <span className="font-bold">
-                {donationCap === null ? 'Unlimited' : `KSh ${Number(donationCap).toLocaleString()}`}
+              {s.capLabel} <span className="font-bold">
+                {donationCap === null ? s.unlimited : `KSh ${Number(donationCap).toLocaleString()}`}
               </span>
             </div>
           </div>
@@ -232,8 +281,8 @@ const PolicySimulator = ({ sandboxData }) => {
         {/* Control 3: Public Funding Slider */}
         <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-6 shadow-sm">
           <div className="mb-4">
-            <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">🏦 Public Funding</h3>
-            <p className="text-xs text-emerald-700 mt-1">Inject small-dollar public donations</p>
+            <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">🏦 {s.controlPublicTitle}</h3>
+            <p className="text-xs text-emerald-700 mt-1">{s.controlPublicDesc}</p>
           </div>
           <div className="space-y-3">
             <input
@@ -246,7 +295,7 @@ const PolicySimulator = ({ sandboxData }) => {
               className="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
             />
             <div className="bg-white bg-opacity-60 px-3 py-2 rounded text-xs text-emerald-800 font-mono">
-              Injection: <span className="font-bold">{publicFundingPercent}% of total funds</span>
+              {s.injection} <span className="font-bold">{publicFundingPercent}% {s.injectionSuffix}</span>
             </div>
           </div>
         </div>
@@ -255,42 +304,42 @@ const PolicySimulator = ({ sandboxData }) => {
       {/* COMPARISON METRICS */}
       {impactMetrics && (
         <div className="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-300 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">📊 Regulatory Impact Assessment</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-4">📊 {s.impactTitle}</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Metric 1: Funds Removed */}
             <div className="bg-white rounded-lg p-4 border-l-4 border-red-500">
-              <p className="text-xs text-slate-500 uppercase font-bold mb-1">Funds Removed</p>
+              <p className="text-xs text-slate-500 uppercase font-bold mb-1">{s.fundsRemoved}</p>
               <p className="text-2xl font-bold text-red-600">
                 KSh {Number(impactMetrics.funds_removed).toLocaleString()}
               </p>
-              <p className="text-xs text-red-500 mt-1">{impactMetrics.funds_removed_pct}% of baseline</p>
+              <p className="text-xs text-red-500 mt-1">{impactMetrics.funds_removed_pct}% {s.baselineSuffix}</p>
             </div>
 
             {/* Metric 2: Network Density */}
             <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500">
-              <p className="text-xs text-slate-500 uppercase font-bold mb-1">Network Density</p>
+              <p className="text-xs text-slate-500 uppercase font-bold mb-1">{s.networkDensity}</p>
               <p className="text-2xl font-bold text-blue-600">
                 {(impactMetrics.network_density_change * 100).toFixed(0)}%
               </p>
-              <p className="text-xs text-blue-500 mt-1">Edges retained after simulation</p>
+              <p className="text-xs text-blue-500 mt-1">{s.edgesRetained}</p>
             </div>
 
             {/* Metric 3: Baseline Network */}
             <div className="bg-white rounded-lg p-4 border-l-4 border-slate-400">
-              <p className="text-xs text-slate-500 uppercase font-bold mb-1">Baseline Network</p>
+              <p className="text-xs text-slate-500 uppercase font-bold mb-1">{s.baselineNetwork}</p>
               <p className="text-sm text-slate-700 font-mono">
-                {baselineData.nodes?.length || 0} nodes, {baselineData.links?.length || 0} edges
+                {baselineData.nodes?.length || 0} {s.nodesWord}, {baselineData.links?.length || 0} {s.edgesWord}
               </p>
-              <p className="text-xs text-slate-500 mt-1">Original state</p>
+              <p className="text-xs text-slate-500 mt-1">{s.originalState}</p>
             </div>
 
             {/* Metric 4: Simulated Network */}
             <div className="bg-white rounded-lg p-4 border-l-4 border-emerald-500">
-              <p className="text-xs text-slate-500 uppercase font-bold mb-1">Simulated Network</p>
+              <p className="text-xs text-slate-500 uppercase font-bold mb-1">{s.simulatedNetwork}</p>
               <p className="text-sm text-emerald-700 font-mono">
-                {simulatedData.nodes?.length || 0} nodes, {simulatedData.links?.length || 0} edges
+                {simulatedData.nodes?.length || 0} {s.nodesWord}, {simulatedData.links?.length || 0} {s.edgesWord}
               </p>
-              <p className="text-xs text-emerald-600 mt-1">After regulations</p>
+              <p className="text-xs text-emerald-600 mt-1">{s.afterRegulations}</p>
             </div>
           </div>
         </div>
@@ -299,15 +348,15 @@ const PolicySimulator = ({ sandboxData }) => {
       {/* TOP 5 CANDIDATES COMPARISON */}
       {impactMetrics?.top_5_candidates && (
         <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">🎯 Top 5 Candidates: Centrality Shift</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-4">🎯 {s.topCandidates}</h3>
           <div className="space-y-3">
             {impactMetrics.top_5_candidates.map((cand, idx) => (
               <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex-1">
                   <p className="font-bold text-slate-800">{cand.candidate}</p>
                   <div className="flex gap-4 mt-2 text-xs font-mono">
-                    <span className="text-blue-600">Baseline: {cand.baseline_centrality.toFixed(4)}</span>
-                    <span className="text-emerald-600">After: {cand.simulated_centrality.toFixed(4)}</span>
+                    <span className="text-blue-600">{s.baseline} {cand.baseline_centrality.toFixed(4)}</span>
+                    <span className="text-emerald-600">{s.after} {cand.simulated_centrality.toFixed(4)}</span>
                   </div>
                 </div>
                 <div className={`text-right min-w-fit ${
@@ -316,7 +365,7 @@ const PolicySimulator = ({ sandboxData }) => {
                   'text-slate-600'
                 }`}>
                   <p className="text-lg font-bold">{cand.centrality_change > 0 ? '+' : ''}{cand.centrality_change.toFixed(4)}</p>
-                  <p className="text-xs uppercase font-bold">Change</p>
+                  <p className="text-xs uppercase font-bold">{s.change}</p>
                 </div>
               </div>
             ))}
@@ -329,9 +378,9 @@ const PolicySimulator = ({ sandboxData }) => {
         {/* Before */}
         <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-3 border-b border-blue-200">
-            <h4 className="font-bold text-blue-900 text-sm uppercase tracking-wider">Baseline Network</h4>
+            <h4 className="font-bold text-blue-900 text-sm uppercase tracking-wider">{s.baselineGraphTitle}</h4>
             <p className="text-xs text-blue-700 mt-1">
-              {baselineData.nodes?.length || 0} nodes | {baselineData.links?.length || 0} connections
+              {baselineData.nodes?.length || 0} {s.nodesWord} | {baselineData.links?.length || 0} {s.baselineConnections}
             </p>
           </div>
           <div className="h-[500px] relative">
@@ -339,14 +388,14 @@ const PolicySimulator = ({ sandboxData }) => {
               <div className="flex items-center justify-center h-full bg-blue-50">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                  <p className="text-xs text-blue-600">Loading...</p>
+                  <p className="text-xs text-blue-600">{s.loading}</p>
                 </div>
               </div>
             ) : (
               <ForceGraph2D
                 graphData={baselineData}
                 backgroundColor="#ffffff"
-                nodeLabel={(node) => `${node.name} (Centrality: ${node.centrality_score.toFixed(4)})`}
+                nodeLabel={(node) => `${node.name} (${s.centrality}: ${node.centrality_score.toFixed(4)})`}
                 nodeColor={node => node.group === "Candidate" ? "#2563eb" : "#94a3b8"}
                 nodeRelSize={6}
                 linkWidth={link => Math.log10((link.amount / 5000) + 1)}
@@ -372,9 +421,9 @@ const PolicySimulator = ({ sandboxData }) => {
         {/* After */}
         <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 px-6 py-3 border-b border-emerald-200">
-            <h4 className="font-bold text-emerald-900 text-sm uppercase tracking-wider">Simulated Network</h4>
+            <h4 className="font-bold text-emerald-900 text-sm uppercase tracking-wider">{s.simulatedGraphTitle}</h4>
             <p className="text-xs text-emerald-700 mt-1">
-              {simulatedData.nodes?.length || 0} nodes | {simulatedData.links?.length || 0} connections
+              {simulatedData.nodes?.length || 0} {s.nodesWord} | {simulatedData.links?.length || 0} {s.baselineConnections}
             </p>
           </div>
           <div className="h-[500px] relative">
@@ -382,14 +431,14 @@ const PolicySimulator = ({ sandboxData }) => {
               <div className="flex items-center justify-center h-full bg-emerald-50">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-2"></div>
-                  <p className="text-xs text-emerald-600">Loading...</p>
+                  <p className="text-xs text-emerald-600">{s.loading}</p>
                 </div>
               </div>
             ) : (
               <ForceGraph2D
                 graphData={simulatedData}
                 backgroundColor="#ffffff"
-                nodeLabel={(node) => `${node.name} (Centrality: ${node.centrality_score.toFixed(4)})`}
+                nodeLabel={(node) => `${node.name} (${s.centrality}: ${node.centrality_score.toFixed(4)})`}
                 nodeColor={node => node.group === "Candidate" ? "#0891b2" : "#94a3b8"}
                 nodeRelSize={6}
                 linkWidth={link => Math.log10((link.amount / 5000) + 1)}
@@ -415,26 +464,26 @@ const PolicySimulator = ({ sandboxData }) => {
 
       {/* LEGEND */}
       <div className="bg-slate-50 border border-slate-200 rounded-lg p-6 shadow-sm">
-        <h4 className="font-bold text-slate-800 text-sm uppercase mb-4">📖 Visualization Legend</h4>
+        <h4 className="font-bold text-slate-800 text-sm uppercase mb-4">📖 {s.legendTitle}</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-xs space-y-2">
-            <p className="font-bold text-slate-700">Node Types</p>
+            <p className="font-bold text-slate-700">{s.nodeTypes}</p>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-              <span className="text-slate-600">Candidate</span>
+              <span className="text-slate-600">{s.candidate}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-slate-400"></div>
-              <span className="text-slate-600">Donor</span>
+              <span className="text-slate-600">{s.donor}</span>
             </div>
           </div>
           <div className="text-xs space-y-2">
-            <p className="font-bold text-slate-700">Edge Thickness</p>
-            <p className="text-slate-600">Logarithmic scale based on donation amount</p>
+            <p className="font-bold text-slate-700">{s.edgeThickness}</p>
+            <p className="text-slate-600">{s.edgeThicknessDesc}</p>
           </div>
           <div className="text-xs space-y-2">
-            <p className="font-bold text-slate-700">Edge Color</p>
-            <p className="text-slate-600">Darker blue = larger donations</p>
+            <p className="font-bold text-slate-700">{s.edgeColor}</p>
+            <p className="text-slate-600">{s.edgeColorDesc}</p>
           </div>
         </div>
       </div>

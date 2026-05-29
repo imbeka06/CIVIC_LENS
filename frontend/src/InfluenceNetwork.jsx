@@ -1,4 +1,6 @@
 import ForceGraph2D from 'react-force-graph-2d';
+import React from 'react';
+import { useLocalizedStrings } from './i18n/useLocalizedStrings';
 
 // A color palette for the different Louvain communities
 const COMMUNITY_COLORS = [
@@ -7,8 +9,13 @@ const COMMUNITY_COLORS = [
 ];
 
 export default function InfluenceNetwork({ graphData }) {
+  const englishStrings = React.useMemo(() => ({
+    noNetworkData: 'No network data available.'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
+
   if (!graphData || !graphData.nodes || !graphData.nodes.length) {
-    return <p style={{ padding: '20px' }}>No network data available.</p>;
+    return <p style={{ padding: '20px' }}>{s.noNetworkData}</p>;
   }
 
   return (

@@ -1,14 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // NEW: Added sandboxData to the props
 const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
   const { language } = useLanguage();
+  const englishStrings = React.useMemo(() => ({
+    welcome: 'Welcome to the Civic Lens AI Explainer. Please select a specific candidate from the dropdown above to generate a multilingual financial dossier.',
+    userPromptPrefix: 'Generate a financial dossier for',
+    submittingFeedback: 'Submitting feedback...',
+    submitFeedbackError: 'Could not submit translation feedback.',
+    submitFeedbackSuccess: 'Feedback saved. Thank you for helping improve language quality.',
+    submitFeedbackFailed: 'Feedback submission failed.',
+    selectedCandidateFallback: 'the selected candidate',
+    unknownDonor: 'Unknown Donor',
+    none: 'None',
+    concentrationHigh: 'high',
+    concentrationModerate: 'moderate',
+    bullet1: 'Total extracted war chest amounts to',
+    bullet2Prefix: 'Heavy reliance on',
+    bullet2Middle: 'contributing',
+    bullet3Prefix: 'Financial network indicates a',
+    bullet3Suffix: 'concentration risk based on current document context.',
+    backendFail: 'Backend AI Engine failed to respond.',
+    systemError: 'System Error:',
+    headerTitle: 'Financial Explainer Bot',
+    headerSubtitle: 'LLM-Powered Intelligence',
+    online: 'Online',
+    plainEnglishSummary: 'Plain English Summary',
+    swahiliSummary: 'Muhtasari wa Kiswahili',
+    selectedLanguageSummary: 'Selected Language Summary',
+    keyInsights: 'Key Insights Breakdown',
+    generating: 'Generating multilingual dossier...',
+    translationFeedbackTitle: 'Translation Quality Feedback',
+    feedbackPlaceholder: 'Report wording issues or suggest a better local term...',
+    send: 'Send'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
   const [messages, setMessages] = useState([
     {
       role: 'bot',
       type: 'welcome',
-      content: 'Welcome to the Civic Lens AI Explainer. Please select a specific candidate from the dropdown above to generate a multilingual financial dossier.'
+      content: s.welcome
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +55,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
 
   const handleTranslationFeedback = async () => {
     if (!latestAnalysis) return;
-    setFeedbackStatus('Submitting feedback...');
+    setFeedbackStatus(s.submittingFeedback);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/translation-feedback`, {
@@ -39,13 +72,13 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Could not submit translation feedback.');
+        throw new Error(s.submitFeedbackError);
       }
 
-      setFeedbackStatus('Feedback saved. Thank you for helping improve language quality.');
+      setFeedbackStatus(s.submitFeedbackSuccess);
       setFeedbackText('');
     } catch (err) {
-      setFeedbackStatus(err.message || 'Feedback submission failed.');
+      setFeedbackStatus(err.message || s.submitFeedbackFailed);
     }
   };
 
@@ -60,10 +93,10 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
 
     // Find the candidate's name for the UI
     const candidateObj = candidates.find(c => String(c.candidate_id) === String(selectedCandidate));
-    const candidateName = candidateObj ? (candidateObj.full_name || candidateObj.name) : "the selected candidate";
+    const candidateName = candidateObj ? (candidateObj.full_name || candidateObj.name) : s.selectedCandidateFallback;
 
     // 1. Add user prompt to chat history
-    setMessages(prev => [...prev, { role: 'user', content: `Generate a financial dossier for ${candidateName}.` }]);
+    setMessages(prev => [...prev, { role: 'user', content: `${s.userPromptPrefix} ${candidateName}.` }]);
     setIsLoading(true);
 
     // --- BRANCH 1: ISOLATED SANDBOX MODE ---
@@ -81,10 +114,10 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
       candDonations.forEach(d => {
         const amount = Number(d.amount) || 0;
         totalRaised += amount;
-        donorMap[d.donor_name || "Unknown Donor"] = (donorMap[d.donor_name || "Unknown Donor"] || 0) + amount;
+        donorMap[d.donor_name || s.unknownDonor] = (donorMap[d.donor_name || s.unknownDonor] || 0) + amount;
       });
 
-      let topDonor = "None";
+      let topDonor = s.none;
       let topDonorAmount = 0;
       Object.entries(donorMap).forEach(([donor, amount]) => {
         if (amount > topDonorAmount) {
@@ -97,23 +130,60 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
 
       // B. Simulate the LLM Response so we don't have to rebuild the backend
       setTimeout(() => {
+        const englishAnalysis = `${candidateName} has a highly concentrated funding network, with ${topPct.toFixed(1)}% of their total war chest originating from a single primary donor: ${topDonor}.`;
+        const swahiliAnalysis = `${candidateName} ana mtandao wa kifedha uliokolea sana, huku asilimia ${topPct.toFixed(1)}% ya jumla ya fedha zake zikitoka kwa mfadhili mkuu mmoja: ${topDonor}.`;
         const translatedBullets = [
-          `Total extracted war chest amounts to KSh ${totalRaised.toLocaleString()}`,
-          `Heavy reliance on ${topDonor}, contributing KSh ${topDonorAmount.toLocaleString()}`,
-          `Financial network indicates a ${topPct > 50 ? 'high' : 'moderate'} concentration risk based on current document context.`
+          `${s.bullet1} KSh ${totalRaised.toLocaleString()}`,
+          `${s.bullet2Prefix} ${topDonor}, ${s.bullet2Middle} KSh ${topDonorAmount.toLocaleString()}`,
+          `${s.bullet3Prefix} ${topPct > 50 ? s.concentrationHigh : s.concentrationModerate} ${s.bullet3Suffix}`
         ];
 
-        setMessages(prev => [...prev, {
-          role: 'bot',
-          type: 'analysis',
-          english: `${candidateName} has a highly concentrated funding network, with ${topPct.toFixed(1)}% of their total war chest originating from a single primary donor: ${topDonor}.`,
-          swahili: `${candidateName} ana mtandao wa kifedha uliokolea sana, huku asilimia ${topPct.toFixed(1)}% ya jumla ya fedha zake zikitoka kwa mfadhili mkuu mmoja: ${topDonor}.`,
-          analysis: `${candidateName} has a highly concentrated funding network, with ${topPct.toFixed(1)}% of their total war chest originating from a single primary donor: ${topDonor}.`,
-          analysis_language: 'en',
-          infographic: translatedBullets,
-          infographic_translated: translatedBullets
-        }]);
-        setIsLoading(false);
+        const pushSandboxMessage = (analysisText) => {
+          setMessages(prev => [...prev, {
+            role: 'bot',
+            type: 'analysis',
+            english: englishAnalysis,
+            swahili: swahiliAnalysis,
+            analysis: analysisText,
+            analysis_language: language,
+            infographic: translatedBullets,
+            infographic_translated: translatedBullets
+          }]);
+          setIsLoading(false);
+        };
+
+        if (language === 'en') {
+          pushSandboxMessage(englishAnalysis);
+          return;
+        }
+
+        if (language === 'sw') {
+          pushSandboxMessage(swahiliAnalysis);
+          return;
+        }
+
+        fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/translate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            text: englishAnalysis,
+            target_lang: language
+          })
+        })
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error();
+            }
+            return res.json();
+          })
+          .then((payload) => {
+            pushSandboxMessage(payload.translated_text || englishAnalysis);
+          })
+          .catch(() => {
+            pushSandboxMessage(englishAnalysis);
+          });
       }, 1500); // Simulate AI thinking time
 
     } 
@@ -122,7 +192,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
       // Fetch the actual LLM response from our backend route
       fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/ai-explainer/${selectedCandidate}?lang=${encodeURIComponent(language)}`)
         .then(res => {
-          if (!res.ok) throw new Error("Backend AI Engine failed to respond.");
+          if (!res.ok) throw new Error(s.backendFail);
           return res.json();
         })
         .then(data => {
@@ -138,12 +208,21 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
           }]);
         })
         .catch(err => {
-          setMessages(prev => [...prev, { role: 'bot', type: 'error', content: `System Error: ${err.message}` }]);
+          setMessages(prev => [...prev, { role: 'bot', type: 'error', content: `${s.systemError} ${err.message}` }]);
         })
         .finally(() => setIsLoading(false));
     }
 
   }, [selectedCandidate, candidates, sandboxData, language]); // Re-fetch dossier when language changes
+
+  useEffect(() => {
+    setMessages((prev) => prev.map((msg, idx) => {
+      if (idx === 0 && msg.type === 'welcome' && msg.role === 'bot') {
+        return { ...msg, content: s.welcome };
+      }
+      return msg;
+    }));
+  }, [s.welcome]);
 
   return (
     <div className="flex flex-col h-[500px] bg-slate-50 rounded-xl border border-slate-200 overflow-hidden font-sans">
@@ -153,8 +232,8 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">AI</div>
           <div>
-            <h3 className="font-bold text-slate-800 text-sm tracking-tight">Financial Explainer Bot</h3>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">LLM-Powered Intelligence</p>
+            <h3 className="font-bold text-slate-800 text-sm tracking-tight">{s.headerTitle}</h3>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">{s.headerSubtitle}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -162,7 +241,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
           </span>
-          <span className="text-xs text-slate-500 font-medium">Online</span>
+          <span className="text-xs text-slate-500 font-medium">{s.online}</span>
         </div>
       </div>
 
@@ -190,26 +269,30 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
               <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm shadow-sm w-full max-w-[90%] overflow-hidden">
                 
                 {/* English Section */}
-                <div className="p-4 border-b border-slate-100">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Plain English Summary</span>
-                  <p className="text-sm text-slate-800 font-medium leading-relaxed">{msg.english}</p>
-                </div>
+                {language === 'en' && (
+                  <div className="p-4 border-b border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">{s.plainEnglishSummary}</span>
+                    <p className="text-sm text-slate-800 font-medium leading-relaxed">{msg.english}</p>
+                  </div>
+                )}
                 
                 {/* Kiswahili Section */}
-                <div className="p-4 bg-slate-50 border-b border-slate-100">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Muhtasari wa Kiswahili</span>
-                  <p className="text-sm text-slate-700 italic leading-relaxed">{msg.swahili}</p>
-                </div>
+                {language === 'sw' && (
+                  <div className="p-4 bg-slate-50 border-b border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">{s.swahiliSummary}</span>
+                    <p className="text-sm text-slate-700 italic leading-relaxed">{msg.swahili}</p>
+                  </div>
+                )}
 
                 {/* Selected Language Section */}
                 <div className="p-4 bg-emerald-50/50 border-b border-slate-100">
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 block">Selected Language Summary</span>
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 block">{s.selectedLanguageSummary}</span>
                   <p className="text-sm text-emerald-900 leading-relaxed">{msg.analysis || msg.english}</p>
                 </div>
 
                 {/* Infographic Bullets */}
                 <div className="p-4 bg-blue-50/50">
-                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2 block">Key Insights Breakdown</span>
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2 block">{s.keyInsights}</span>
                   <ul className="space-y-2">
                     {(msg.infographic_translated || msg.infographic).map((point, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs text-blue-900 leading-relaxed">
@@ -232,7 +315,7 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
               <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
               <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <span className="text-xs text-slate-500 ml-2 font-medium">Generating bilingual dossier...</span>
+              <span className="text-xs text-slate-500 ml-2 font-medium">{s.generating}</span>
             </div>
           </div>
         )}
@@ -243,21 +326,21 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
       {latestAnalysis && (
         <div className="border-t border-slate-200 bg-white p-4">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Translation Quality Feedback
+            {s.translationFeedbackTitle}
           </p>
           <div className="flex gap-2">
             <input
               type="text"
               value={feedbackText}
               onChange={(e) => setFeedbackText(e.target.value)}
-              placeholder="Report wording issues or suggest a better local term..."
+              placeholder={s.feedbackPlaceholder}
               className="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700"
             />
             <button
               onClick={handleTranslationFeedback}
               className="px-4 py-2 rounded-md bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700"
             >
-              Send
+              {s.send}
             </button>
           </div>
           {feedbackStatus && (

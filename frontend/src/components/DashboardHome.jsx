@@ -1,15 +1,39 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 const DashboardHome = () => {
-  const { t } = useLanguage();
+  const englishStrings = React.useMemo(() => ({
+    hubTitle: 'Laboratory Modules',
+    hubSubtitle: 'Select an analytical engine below to begin your investigation.',
+    module1Title: 'Funding Trends',
+    module1Subtitle: 'War Chest Analysis',
+    module1Description: 'Analyze total capital raised by top candidates using vertical bar charts.',
+    module2Title: 'Network Intelligence',
+    module2Subtitle: 'Relational Dynamics',
+    module2Description: 'Interactive physics-based graph mapping donor cliques and power brokers.',
+    module3Title: 'Geospatial Wealth',
+    module3Subtitle: 'Regional Concentration',
+    module3Description: 'Choropleth map detailing the Funding Concentration Index (FCI) across Kenya.',
+    module4Title: 'Policy Simulator',
+    module4Subtitle: 'Regulatory Impact Engine',
+    module4Description: 'Test hypothetical campaign finance regulations and instantly observe impacts.',
+    module5Title: 'AI Explainer Bot',
+    module5Subtitle: 'Multilingual LLM Intelligence',
+    module5Description: 'Generates local-language dossiers explaining campaign finance networks.',
+    moduleIntakeTitle: 'Data Intake Pipeline',
+    moduleIntakeSubtitle: 'AI Extraction Engine',
+    moduleIntakeDescription: 'Upload unstructured documents and let the LLM automatically extract financial networks.',
+    moduleIntakeDropLabel: 'Drop Document Here'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
+
   const modules = [
     {
       id: "module-1",
-      title: "Funding Trends",
-      subtitle: "War Chest Analysis",
-      description: "Analyze total capital raised by top candidates using vertical bar charts.",
+      title: s.module1Title,
+      subtitle: s.module1Subtitle,
+      description: s.module1Description,
       link: "/module-1",
       color: "emerald",
       preview: (
@@ -24,9 +48,9 @@ const DashboardHome = () => {
     },
     {
       id: "module-2",
-      title: "Network Intelligence",
-      subtitle: "Relational Dynamics",
-      description: "Interactive physics-based graph mapping donor cliques and power brokers.",
+      title: s.module2Title,
+      subtitle: s.module2Subtitle,
+      description: s.module2Description,
       link: "/module-2",
       color: "blue",
       preview: (
@@ -45,9 +69,9 @@ const DashboardHome = () => {
     },
     {
       id: "module-3",
-      title: "Geospatial Wealth",
-      subtitle: "Regional Concentration",
-      description: "Choropleth map detailing the Funding Concentration Index (FCI) across Kenya.",
+      title: s.module3Title,
+      subtitle: s.module3Subtitle,
+      description: s.module3Description,
       link: "/module-3",
       color: "amber",
       preview: (
@@ -60,9 +84,9 @@ const DashboardHome = () => {
     },
     {
       id: "module-4",
-      title: "Policy Simulator",
-      subtitle: "Regulatory Impact Engine",
-      description: "Test hypothetical campaign finance regulations and instantly observe impacts.",
+      title: s.module4Title,
+      subtitle: s.module4Subtitle,
+      description: s.module4Description,
       link: "/module-4",
       color: "rose",
       preview: (
@@ -84,9 +108,9 @@ const DashboardHome = () => {
     },
     {
       id: "module-5",
-      title: "AI Explainer Bot",
-      subtitle: "Bilingual LLM Intelligence",
-      description: "Generates plain-English and Kiswahili dossiers explaining financial networks.",
+      title: s.module5Title,
+      subtitle: s.module5Subtitle,
+      description: s.module5Description,
       link: "/module-5",
       color: "purple",
       preview: (
@@ -99,14 +123,14 @@ const DashboardHome = () => {
     },
     {
       id: "module-intake",
-      title: "Data Intake Pipeline",
-      subtitle: "AI Extraction Engine",
-      description: "Upload unstructured documents and let the LLM automatically extract financial networks.",
+      title: s.moduleIntakeTitle,
+      subtitle: s.moduleIntakeSubtitle,
+      description: s.moduleIntakeDescription,
       link: "/data-intake",
       color: "slate",
       preview: (
         <div className="flex items-center justify-center h-16 w-full mt-4 opacity-70 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
-          <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Drop Document Here</span>
+          <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">{s.moduleIntakeDropLabel}</span>
         </div>
       )
     }
@@ -115,8 +139,8 @@ const DashboardHome = () => {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="border-l-4 border-blue-600 pl-4">
-        <h2 className="text-3xl font-bold text-slate-800">{t('hubTitle')}</h2>
-        <p className="text-slate-500 mt-2 text-sm">{t('hubSubtitle')}</p>
+        <h2 className="text-3xl font-bold text-slate-800">{s.hubTitle}</h2>
+        <p className="text-slate-500 mt-2 text-sm">{s.hubSubtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

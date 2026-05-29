@@ -32,12 +32,18 @@ SUPPORTED_LANGUAGE_NAMES = {
     "kikuyu": "Kikuyu",
     "kamba": "Kamba",
     "giriama": "Giriama",
-    "kalenjin": "Kalenjin"
+    "kalenjin": "Kalenjin",
+    "luhya": "Luhya"
 }
 
 
 class TranslationRequest(BaseModel):
     text: str
+    target_lang: str = "sw"
+
+
+class TranslationBatchRequest(BaseModel):
+    entries: Dict[str, str]
     target_lang: str = "sw"
 
 
@@ -111,6 +117,29 @@ def translate_content(payload: TranslationRequest):
         "source_text": payload.text,
         "translated_text": translated,
         "target_lang": lang_code
+    }
+
+
+@app.post("/api/translate-batch")
+def translate_batch_content(payload: TranslationBatchRequest):
+    lang_code = (payload.target_lang or "en").lower()
+
+    if lang_code == "en":
+        return {
+            "target_lang": "en",
+            "entries": payload.entries
+        }
+
+    if lang_code not in SUPPORTED_LANGUAGE_NAMES:
+        raise HTTPException(status_code=400, detail=f"Unsupported language: {lang_code}")
+
+    translated_entries = {}
+    for key, value in payload.entries.items():
+        translated_entries[key] = translate_text(value, lang_code)
+
+    return {
+        "target_lang": lang_code,
+        "entries": translated_entries
     }
 
 

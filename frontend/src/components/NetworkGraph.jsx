@@ -1,9 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // NEW: Accept the sandboxData prop
 const NetworkGraph = ({ targetCandidateId, sandboxData }) => {
   const [rawData, setRawData] = useState({ nodes: [], links: [] });
+  const englishStrings = React.useMemo(() => ({
+    unknownCandidate: 'Unknown Candidate',
+    unknownDonor: 'Unknown Donor',
+    centrality: 'Centrality',
+    donation: 'Donation'
+  }), []);
+  const s = useLocalizedStrings(englishStrings);
 
   useEffect(() => {
     // --- BRANCH 1: ISOLATED SANDBOX MODE ---
@@ -12,8 +20,8 @@ const NetworkGraph = ({ targetCandidateId, sandboxData }) => {
       const linksList = [];
 
       sandboxData.donations.forEach(don => {
-        const cName = don.candidate_name || "Unknown Candidate";
-        const dName = don.donor_name || "Unknown Donor";
+        const cName = don.candidate_name || s.unknownCandidate;
+        const dName = don.donor_name || s.unknownDonor;
         
         // Generate safe IDs matching our backend logic
         const cId = cName.toLowerCase().replace(/ /g, "_").substring(0, 50);
@@ -77,7 +85,7 @@ const NetworkGraph = ({ targetCandidateId, sandboxData }) => {
       <ForceGraph2D
         graphData={graphData}
         backgroundColor="#ffffff"
-        nodeLabel={(node) => `${node.name} (Centrality: ${node.centrality_score.toFixed(4)})`}
+        nodeLabel={(node) => `${node.name} (${s.centrality}: ${node.centrality_score.toFixed(4)})`}
         
         nodeColor={node => node.group === "Candidate" ? "#2563eb" : "#94a3b8"}
         nodeRelSize={6}
@@ -90,7 +98,7 @@ const NetworkGraph = ({ targetCandidateId, sandboxData }) => {
         linkColor={link => link.amount > 500000 ? "#1e3a8a" : "#cbd5e1"} 
         
         // Added KSh Label on Hover for the edges
-        linkLabel={link => `Donation: KSh ${Number(link.amount).toLocaleString()}`}
+        linkLabel={link => `${s.donation}: KSh ${Number(link.amount).toLocaleString()}`}
 
         linkDirectionalParticles={2}
         linkDirectionalParticleWidth={link => link.amount > 1000000 ? 4 : 0} 
