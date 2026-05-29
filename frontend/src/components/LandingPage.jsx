@@ -57,8 +57,24 @@ const LandingPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full max-w-6xl z-10 px-4">
+
+        {/* Card 1: Learn and Educate */}
+        <Link to="/learn" className="flex-1 group relative bg-white rounded-3xl p-10 border border-slate-200 shadow-xl hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center text-center">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-cyan-500"></div>
+          <div className="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+          <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-8 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v11.494m-9-5.747h18M5.5 5.5l13 13m0-13l-13 13" /></svg>
+          </div>
+
+          <h2 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:text-indigo-700 transition-colors">{s.card3Title}</h2>
+          <p className="text-indigo-600 font-bold uppercase tracking-widest text-[11px] mb-4">{s.card3Kicker}</p>
+          <p className="text-slate-500 text-sm leading-relaxed">
+            {s.card3Body}
+          </p>
+        </Link>
         
-        {/* Card 1: Civic Lens Lab (Global Database) */}
+        {/* Card 2: Civic Lens Lab (Global Database) */}
         <Link to="/hub" className="flex-1 group relative bg-white rounded-3xl p-10 border border-slate-200 shadow-xl hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center text-center">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
           <div className="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -75,7 +91,7 @@ const LandingPage = () => {
           </p>
         </Link>
 
-        {/* Card 2: AI Extraction (Sandbox) */}
+        {/* Card 3: AI Extraction (Sandbox) */}
         <Link to="/data-intake" className="flex-1 group relative bg-slate-900 rounded-3xl p-10 border border-slate-700 shadow-xl hover:shadow-2xl hover:shadow-purple-900/40 hover:-translate-y-3 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center text-center">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 to-blue-500"></div>
           <div className="absolute inset-0 bg-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -89,21 +105,6 @@ const LandingPage = () => {
           <p className="text-purple-400 font-bold uppercase tracking-widest text-[11px] mb-4">{s.card2Kicker}</p>
           <p className="text-slate-400 text-sm leading-relaxed">
             {s.card2Body}
-          </p>
-        </Link>
-
-        <Link to="/learn" className="flex-1 group relative bg-white rounded-3xl p-10 border border-slate-200 shadow-xl hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center text-center">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-cyan-500"></div>
-          <div className="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-
-          <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-8 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v11.494m-9-5.747h18M5.5 5.5l13 13m0-13l-13 13" /></svg>
-          </div>
-
-          <h2 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:text-indigo-700 transition-colors">{s.card3Title}</h2>
-          <p className="text-indigo-600 font-bold uppercase tracking-widest text-[11px] mb-4">{s.card3Kicker}</p>
-          <p className="text-slate-500 text-sm leading-relaxed">
-            {s.card3Body}
           </p>
         </Link>
 

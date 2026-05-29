@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 // NEW: Added sandboxData to the props
 const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { language } = useLanguage();
   const englishStrings = React.useMemo(() => ({
     welcome: 'Welcome to the Civic Lens AI Explainer. Please select a specific candidate from the dropdown above to generate a multilingual financial dossier.',
@@ -57,6 +58,9 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
   const [feedbackStatus, setFeedbackStatus] = useState('');
   const messagesEndRef = useRef(null);
   const educationKeyRef = useRef('');
+  const lastCandidateRequestKeyRef = useRef('');
+  const hasInitializedCandidateEffectRef = useRef(false);
+  const suppressedCandidateIdRef = useRef(null);
 
   const latestAnalysis = [...messages].reverse().find(
     (msg) => msg.role === 'bot' && msg.type === 'analysis'
@@ -103,6 +107,14 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
     const docKey = `${educationDoc.url || educationDoc.title}:${language}`;
     if (educationKeyRef.current === docKey) return;
     educationKeyRef.current = docKey;
+
+    // Prevent an automatic candidate dossier from firing based on stale selection.
+    if (selectedCandidate && selectedCandidate !== 'all') {
+      suppressedCandidateIdRef.current = selectedCandidate;
+    }
+
+    // Clear one-time route state so the same document doesn't auto-replay.
+    navigate(location.pathname, { replace: true, state: {} });
 
     setMessages(prev => [...prev, {
       role: 'user',
@@ -153,11 +165,30 @@ const AIExplainer = ({ selectedCandidate, candidates, sandboxData }) => {
         }]);
       })
       .finally(() => setIsLoading(false));
-  }, [location.state, language, s.educationPromptPrefix, s.educationApiFail, s.keyChangesLabel, s.whatIsNewLabel, s.actionPointsLabel, s.sourceNoteLabel, s.systemError]);
+  }, [location.state, location.pathname, navigate, language, selectedCandidate, s.educationPromptPrefix, s.educationApiFail, s.keyChangesLabel, s.whatIsNewLabel, s.actionPointsLabel, s.sourceNoteLabel, s.systemError]);
 
   // Trigger AI when a new candidate is selected
   useEffect(() => {
+    // Skip auto-run on first mount; only run after user-driven selection changes.
+    if (!hasInitializedCandidateEffectRef.current) {
+      hasInitializedCandidateEffectRef.current = true;
+      return;
+    }
+
+    // Don't auto-run if we just arrived from education mode with a previous selection.
+    if (suppressedCandidateIdRef.current && selectedCandidate === suppressedCandidateIdRef.current) {
+      return;
+    }
+
     if (!selectedCandidate || selectedCandidate === "all" || candidates.length === 0) return;
+
+    const candidateRequestKey = `${selectedCandidate}|${language}|${sandboxData && sandboxData.donations ? 'sandbox' : 'global'}`;
+    if (lastCandidateRequestKeyRef.current === candidateRequestKey) return;
+    lastCandidateRequestKeyRef.current = candidateRequestKey;
+
+    if (suppressedCandidateIdRef.current && selectedCandidate !== suppressedCandidateIdRef.current) {
+      suppressedCandidateIdRef.current = null;
+    }
 
     // Find the candidate's name for the UI
     const candidateObj = candidates.find(c => String(c.candidate_id) === String(selectedCandidate));
