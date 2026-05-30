@@ -1,13 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../i18n/LanguageContext';
-import { SUPPORTED_LANGUAGES } from '../i18n/languages';
 import { useLocalizedStrings } from '../i18n/useLocalizedStrings';
 
 const LandingPage = () => {
-  const { language, setLanguage } = useLanguage();
   const englishStrings = React.useMemo(() => ({
-    selectLanguage: 'Select language',
     titleLine1: "Unveil Your Country's",
     titleLine2: 'Funding Landscape',
     intro: 'Choose your analytical path. Explore our global database of political networks, or upload your own raw documents to assess localized financial relationships.',
@@ -28,21 +24,6 @@ const LandingPage = () => {
       {/* Subtle Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-emerald-400/10 blur-3xl rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-400/10 blur-3xl rounded-full pointer-events-none"></div>
-
-      <div className="absolute top-6 right-6 z-20 bg-white/90 border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
-        <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">
-          {s.selectLanguage}
-        </label>
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="text-sm border border-slate-300 rounded-md px-2 py-1 bg-white text-slate-700"
-        >
-          {SUPPORTED_LANGUAGES.map((lang) => (
-            <option key={lang.code} value={lang.code}>{lang.label}</option>
-          ))}
-        </select>
-      </div>
 
       <div className="text-center mb-16 z-10">
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-4 uppercase">

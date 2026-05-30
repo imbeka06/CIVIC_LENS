@@ -484,6 +484,11 @@ app.add_middleware(
 def get_candidates(db: Session = Depends(get_db)):
     return db.query(models.Candidate).all()
 
+@app.get("/api/offices")
+def get_offices(db: Session = Depends(get_db)):
+    rows = db.query(models.Candidate.office_sought).distinct().all()
+    return sorted([r[0] for r in rows if r[0]])
+
 @app.get("/api/donors")
 def get_donors(db: Session = Depends(get_db)):
     return db.query(models.Donor).all()
